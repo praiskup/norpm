@@ -24,6 +24,9 @@ def tokenize(string):
             if c == '\\':
                 backslash_mode = True
                 continue
+            if c in '{}':
+                yield '_' + c
+                continue
             yield c
 
 
@@ -106,14 +109,16 @@ def parse_rpmmacros(file_contents, macros):
             if c == "follow_line":
                 continue
 
-            if c == '{':
+            if c == '_{':
                 depth += 1
-                ctx.value += c
+                ctx.value += '{'
                 continue
             if depth:
-                ctx.value += c
-                if c == '}':
+                if c == '_}':
                     depth -= 1
+                    ctx.value += '}'
+                else:
+                    ctx.value += c
                 continue
             if c == '\n':
                 macros[ctx.macroname] = (

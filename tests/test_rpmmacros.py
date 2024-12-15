@@ -47,6 +47,12 @@ def test_newline():
     assert macros == {"bar": (None, "blah and blah")}
 
 
+def test_backslashed():
+    macros = {}
+    parse_rpmmacros("%foo %{\\}\n}\n", macros)
+    assert macros == {"foo": (None, "%{}\n}")}
+
+
 def test_ignore_till_eol():
     macros = {}
     parse_rpmmacros("foo %bar baz\nblah\n%recover foo", macros)
