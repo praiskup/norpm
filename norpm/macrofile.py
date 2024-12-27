@@ -4,30 +4,11 @@ Parse macro file into a "macroname = unexpanded value" dictionary
 
 import logging
 
+from norpm.tokenize import tokenize, Special
+
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-
-def tokenize(string):
-    """
-    Return either character or special token.
-    """
-    backslash_mode = False
-    for c in string:
-        if backslash_mode:
-            backslash_mode = False
-            if c == "\n":
-                yield "follow_line"
-            else:
-                yield c
-        else:
-            if c == '\\':
-                backslash_mode = True
-                continue
-            if c in '{}':
-                yield '_' + c
-                continue
-            yield c
 
 
 class _CTX():
@@ -109,14 +90,14 @@ def parse_rpmmacros(file_contents, macros):
             if c == "follow_line":
                 continue
 
-            if c == '_{':
+            if c == Special('{'):
                 depth += 1
-                ctx.value += '{'
+                ctx.value += c
                 continue
             if depth:
-                if c == '_}':
+                if c == Special('}'):
                     depth -= 1
-                    ctx.value += '}'
+                    ctx.value += c
                 else:
                     ctx.value += c
                 continue
