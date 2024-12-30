@@ -31,11 +31,14 @@ def test_basicdef():
         "blah": ( "%x %y -p*", "p:"),
     }
 
+    assert macros["foo"].to_dict() == ("bar",)
+    assert "foo" in macros
+
 
 def test_empty():
     macros = MacroRegistry()
     parse_rpmmacros("", macros)
-    assert macros.empty()
+    assert macros.empty
 
 
 def test_newline():

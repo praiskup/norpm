@@ -28,11 +28,6 @@ class Macro:
         """Define this macro."""
         self.stack.append(MacroDefinition(value, parameters))
 
-    @property
-    def defined(self):
-        """Return True if the macro is defined."""
-        return bool(self.stack)
-
     def to_dict(self):
         """Return the last definition of macro as serializable object."""
         return self.stack[-1].to_dict()
@@ -45,18 +40,29 @@ class MacroRegistry:
         self.db = {}
 
     def __getitem__(self, name):
-        if name not in self.db:
-            self.db[name] = Macro()
         return self.db[name]
+
+    def __setitem__(self, name, value):
+        params = None
+        if isinstance(value, tuple):
+            value, params = value
+        try:
+            macro = self.db[name]
+        except KeyError:
+            macro = self.db[name] = Macro()
+        macro.define(value, params)
+
+    def __contains__(self, name):
+        return name in self.db
 
     def to_dict(self):
         """Return a serializable object, used for testing."""
         output = {}
         for name, macrospec in self.db.items():
-            if macrospec.defined:
-                output[name] = macrospec.to_dict()
+            output[name] = macrospec.to_dict()
         return output
 
+    @property
     def empty(self):
         """Return True if no macro is defined."""
-        return not any(x.defined() for x in self.db)
+        return not self.db
