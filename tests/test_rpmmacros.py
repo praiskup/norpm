@@ -4,62 +4,63 @@ Test basic rpmmacro file parsing.
 
 # pylint: disable=missing-function-docstring
 
+from norpm.macro import MacroRegistry
 from norpm.macrofile import parse_rpmmacros
 
 
 def test_basicdef():
-    macros = {}
+    macros = MacroRegistry()
     parse_rpmmacros("%foo bar", macros)
-    assert macros == {"foo": (None, "bar")}
+    assert macros.to_dict() == {"foo": ("bar",)}
     parse_rpmmacros(
         "%baz bar %{\n"
         " foo}\n",
         macros
     )
-    assert macros == {
-        "foo": (None, "bar"),
-        "baz": (None, "bar %{\n foo}"),
+    assert macros.to_dict() == {
+        "foo": ("bar",),
+        "baz": ("bar %{\n foo}",),
     }
     parse_rpmmacros(
         "%blah(p:) %x %y -p*",
         macros
     )
-    assert macros == {
-        "foo": (None, "bar"),
-        "baz": (None, "bar %{\n foo}"),
-        "blah": ("p:", "%x %y -p*"),
+    assert macros.to_dict() == {
+        "foo": ("bar",),
+        "baz": ("bar %{\n foo}",),
+        "blah": ( "%x %y -p*", "p:"),
     }
 
 
 def test_empty():
-    macros = {}
+    macros = MacroRegistry()
     parse_rpmmacros("", macros)
-    assert not macros
+    assert macros.empty()
 
 
 def test_newline():
-    macros = {}
+    macros = MacroRegistry()
     parse_rpmmacros(
         "%foo\\\n"
         " %bar blah\\\n"
         " and \\blah",
         macros)
-    assert macros == {"bar": (None, "blah and blah")}
+    assert macros.to_dict() == {"bar": ("blah and blah",)}
 
 
 def test_backslashed():
-    macros = {}
+    macros = MacroRegistry()
     parse_rpmmacros("%foo %{\\}\n}\n", macros)
-    assert macros == {"foo": (None, "%{}\n}")}
+    assert macros.to_dict() == {"foo": ("%{}\n}",)}
 
 
 def test_ignore_till_eol():
-    macros = {}
+    macros = MacroRegistry()
     parse_rpmmacros("foo %bar baz\nblah\n%recover foo", macros)
-    assert macros == {"recover": (None, "foo")}
+    assert macros.to_dict() == {"recover": ("foo",)}
 
 
 def test_whitespice_before_name():
-    macros = {}
+    macros = MacroRegistry()
     parse_rpmmacros(" % bar baz", macros)
-    assert macros == {"bar": (None, "baz")}
+    assert macros.to_dict() == {"bar": ("baz",)}

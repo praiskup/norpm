@@ -102,9 +102,9 @@ def parse_rpmmacros(file_contents, macros):
                     ctx.value += c
                 continue
             if c == '\n':
-                macros[ctx.macroname] = (
-                    ctx.params,
+                macros[ctx.macroname].define(
                     ctx.value,
+                    ctx.params,
                 )
                 _reset()
                 continue
@@ -118,4 +118,4 @@ def parse_rpmmacros(file_contents, macros):
             continue
 
     if ctx.state == "VALUE":
-        macros[ctx.macroname] = (ctx.params, ctx.value,)
+        macros[ctx.macroname].define(ctx.value, ctx.params)
