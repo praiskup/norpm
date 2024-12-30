@@ -32,6 +32,10 @@ class Macro:
         """Return the last definition of macro as serializable object."""
         return self.stack[-1].to_dict()
 
+    def value(self):
+        """Value of the last macro definition."""
+        return self.stack[-1].value
+
 
 class MacroRegistry:
     """Registry of macro definitions."""
@@ -44,6 +48,10 @@ class MacroRegistry:
 
     def __setitem__(self, name, value):
         params = None
+
+        if not is_macro_name(name):
+            raise KeyError(f"{name} is not a valid macro name")
+
         if isinstance(value, tuple):
             value, params = value
         try:
@@ -66,3 +74,14 @@ class MacroRegistry:
     def empty(self):
         """Return True if no macro is defined."""
         return not self.db
+
+
+def is_macro_name(name):
+    """
+    Return True if Name is a valid RPM macro name
+    """
+    if not name[0].isalpha():
+        return False
+    if len(name) < 3:
+        return False
+    return name.isalnum()

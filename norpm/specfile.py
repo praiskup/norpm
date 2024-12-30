@@ -3,6 +3,7 @@ Spec file parser
 """
 
 from norpm.tokenize import tokenize, Special
+from norpm.macro import is_macro_name
 
 # pylint: disable=too-many-statements,too-many-branches
 
@@ -77,6 +78,35 @@ def parse_specfile(file_contents, _macros):
         parsed.append(buffer)
 
     return [x for x in parsed if x != '']
+
+
+def expandMacro(macroname, definitions, fallback):
+    if macroname not in definitions:
+        return fallback
+    return definitions[macroname].value()
+
+
+def _expand_snippet(snippet, definitions):
+    if snippet in ['%', '%%']:
+        return '%'
+    if not snippet.startswith("%"):
+        return snippet
+
+    if snippet.startswith("%{"):
+        if is_macro_name(snippet[2:-1]):
+            return expandMacro(snippet[2:-1], definitions, snippet)
+        return "TODO"
+
+    if is_macro_name(snippet[1:]):
+        return expandMacro(snippet[1:], definitions, snippet)
+
+    return "TODO"
+
+
+def expand_macros(snippets, definitions):
+    "expand macros in parse_specfile() output"
+    return [_expand_snippet(s, definitions) for s in snippets]
+
 
 # %macro
 # %{macro}
