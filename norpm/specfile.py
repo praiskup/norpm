@@ -2,28 +2,37 @@
 Spec file parser
 """
 
+from collections import deque
+
 from norpm.tokenize import tokenize, Special
 from norpm.macro import is_macro_name
 
 # pylint: disable=too-many-statements,too-many-branches
+
 
 def parse_specfile(file_contents, _macros):
     """
     Parse file_contents string into a list of parts, macros and raw string
     snippets.
     """
-    parsed = []
+    return [i for i in get_parts(file_contents, _macros) if i != ""]
+
+
+def get_parts(string, _macros):
+    """
+    Split input string into a macro and non-macro parts.
+    """
     state = "TEXT"
     depth = 0
 
     buffer = ""
-    for c in tokenize(file_contents):
+    for c in tokenize(string):
         if state == "TEXT":
             if c != "%":
                 buffer += c
                 continue
 
-            parsed.append(buffer)
+            yield buffer
             buffer = c
             state = "MACRO"
             continue
@@ -35,14 +44,14 @@ def parse_specfile(file_contents, _macros):
                 continue
 
             if c.isspace():
-                parsed.append(buffer)
+                yield buffer
                 state = "TEXT"
                 buffer = c
                 continue
 
             if c == "%":
                 buffer += "%"
-                parsed.append(buffer)
+                yield buffer
                 buffer = ""
                 state = "TEXT"
                 continue
@@ -66,7 +75,7 @@ def parse_specfile(file_contents, _macros):
 
             if c == Special('}'):
                 buffer += c
-                parsed.append(buffer)
+                yield buffer
                 buffer = ""
                 state = "TEXT"
                 continue
@@ -74,13 +83,10 @@ def parse_specfile(file_contents, _macros):
             buffer += c
             continue
 
-    if state == "MACRO":
-        parsed.append(buffer)
-
-    return [x for x in parsed if x != '']
+    yield buffer
 
 
-def expandMacro(macroname, definitions, fallback):
+def expand_macro(macroname, definitions, fallback):
     if macroname not in definitions:
         return fallback
     return definitions[macroname].value()
@@ -94,28 +100,34 @@ def _expand_snippet(snippet, definitions):
 
     if snippet.startswith("%{"):
         if is_macro_name(snippet[2:-1]):
-            return expandMacro(snippet[2:-1], definitions, snippet)
+            return expand_macro(snippet[2:-1], definitions, snippet)
         return "TODO"
 
     if is_macro_name(snippet[1:]):
-        return expandMacro(snippet[1:], definitions, snippet)
+        return expand_macro(snippet[1:], definitions, snippet)
 
     return "TODO"
 
 
 def expand_macros(snippets, definitions):
     "expand macros in parse_specfile() output"
+
     return [_expand_snippet(s, definitions) for s in snippets]
 
 
-# %macro
-# %{macro}
-# %%
-# %{?foo:1}
-# %{!?foo:1}
-# %define foo bar
-# %global foo bar
-
-# %<foo>
-#   %define|%global|%if ...
-# %{ }
+def expand_string(string, macros):
+    """ expand macros in string """
+    parts = list(get_parts(string, macros))
+    todo = deque(parts)
+    while todo:
+        string = todo.popleft()
+        if not string.startswith('%'):
+            yield string
+            continue
+        expanded = _expand_snippet(string, macros)
+        if expanded == string:
+            yield string
+            continue
+        add = [x for x in  list(get_parts(expanded, macros)) if x != ""]
+        add.reverse()
+        todo.extendleft(add)
