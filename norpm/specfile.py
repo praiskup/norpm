@@ -18,6 +18,18 @@ def parse_specfile(file_contents, _macros):
     return [i for i in get_parts(file_contents, _macros) if i != ""]
 
 
+def is_special(name):
+    """Return True if the macro name is a special construct"""
+    special = {"if", "else", "endif", "setup"}
+    return name in special
+
+
+def is_definition(name):
+    """Return True if the Name is a macro definition keyword"""
+    special = {"define", "global"}
+    return name in special
+
+
 def get_parts(string, macros):
     """
     Split input string into a macro and non-macro parts.
@@ -79,8 +91,14 @@ def get_parts(string, macros):
 
             if c == ' ':
                 macroname = buffer[1:]
-                if macroname in macros and macros[macroname].parametric:
+                if is_special(macroname) or \
+                        macroname in macros and macros[macroname].parametric:
                     state = "MACRO_PARAMETRIC"
+                    buffer += c
+                    continue
+
+                if is_definition(macroname):
+                    state = "MACRO_DEFINITION"
                     buffer += c
                     continue
 
@@ -119,6 +137,33 @@ def get_parts(string, macros):
                 buffer = ""
                 state = "TEXT"
                 continue
+            if c == "\n":
+                yield buffer
+                buffer = "\n"
+                state = "TEXT"
+                continue
+
+            buffer += c
+            continue
+
+        if state == "MACRO_DEFINITION":
+            if c == Special("\n"):
+                buffer += "\\\n"
+                continue
+
+            if c == Special('{'):
+                depth += 1
+                buffer += c
+                continue
+
+            if depth:
+                if c == Special('}'):
+                    depth -= 1
+                    buffer += c
+                else:
+                    buffer += c
+                continue
+
             if c == "\n":
                 yield buffer
                 buffer = "\n"
