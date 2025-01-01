@@ -2,8 +2,13 @@
 
 # pylint: disable=missing-function-docstring
 
+import pytest
+
 from norpm.specfile import (
-    expand_macros, get_parts, expand_string, expand_string_generator)
+    expand_macros, get_parts, expand_string,
+    expand_string_generator, expand_specfile_generator,
+    expand_specfile,
+)
 from norpm.macro import MacroRegistry
 
 
@@ -82,3 +87,33 @@ def test_expand_underscore():
     db["_exec_prefix"] = "%_prefix"
     db["_bindir"] = "%_exec_prefix/bin"
     assert expand_string("%{_bindir}", db) == "/usr/bin"
+
+
+@pytest.mark.parametrize("statement", ["%define", "%global"])
+def test_expand_specfile_generator(statement):
+    db = MacroRegistry()
+    assert expand_specfile(
+        "%define myname foo\n"
+        "%define myversion 1.1\n"
+        "Name: %myname\n"
+        f"{statement} redefined %name\n"
+        "Version: %myversion", db
+    ) == (
+        "Name: foo\n"
+        "Version: 1.1"
+    )
+    assert db["name"].value == "foo"
+    expected = "foo" if statement == "%global" else "%name"
+    assert db["redefined"].value == expected
+
+
+def test_invalid_tag():
+    db = MacroRegistry()
+    assert list(expand_specfile_generator(
+        "Name: %myname\n"
+        "foo\n",
+        db,
+    )) == [
+        "Name: %myname\n",
+        "foo\n", '',
+    ]

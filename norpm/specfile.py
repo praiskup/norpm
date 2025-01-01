@@ -217,6 +217,46 @@ def expand_string(string, macros):
     return "".join(list(expand_string_generator(string, macros)))
 
 
+def define_tags_as_macros(line, macros):
+    """Define macros from specfile tags, like %name from Name:"""
+    try:
+        tag_raw, definition = line.split(":", maxsplit=1)
+    except ValueError:
+        return
+    tag = tag_raw.strip().lower()
+    if tag in [
+        "name",
+        "release",
+        "version",
+        "epoch",
+    ]:
+        macros[tag] = definition.strip()
+
+
+def expand_specfile(content, macros):
+    """Expand specfile as string"""
+    return "".join(expand_specfile_generator(content, macros))
+
+
+def expand_specfile_generator(content, macros):
+    """Expand specfile, parse Name/Version/etc."""
+    buffer = ""
+    for string in expand_string_generator(content, macros):
+        buffer += string
+        lines = deque(buffer.splitlines(keepends=True))
+        if not lines:
+            continue
+        buffer = ""
+        while lines:
+            line = lines.popleft()
+            if line and line[-1] == "\n":
+                define_tags_as_macros(line, macros)
+                yield line
+            else:
+                buffer = line
+    yield buffer
+
+
 def expand_string_generator(string, macros):
     """ expand macros in string """
     parts = list(get_parts(string, macros))
