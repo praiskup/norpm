@@ -30,7 +30,7 @@ def tokenize(string):
         if backslash_mode:
             backslash_mode = False
             if c == "\n":
-                yield "follow_line"
+                yield Special(c)
             else:
                 yield c
         else:

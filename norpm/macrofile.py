@@ -56,7 +56,7 @@ def parse_rpmmacros(file_contents, macros):
             continue
 
         if ctx.state == "MACRO_NAME":
-            if c == "follow_line":
+            if c == Special("\n"):
                 _reset()
                 continue
 
@@ -87,7 +87,7 @@ def parse_rpmmacros(file_contents, macros):
             continue
 
         if ctx.state == "VALUE":
-            if c == "follow_line":
+            if c == Special("\n"):
                 continue
 
             if c == Special('{'):
