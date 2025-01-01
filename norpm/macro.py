@@ -82,12 +82,21 @@ class MacroRegistry:
         return not self.db
 
 
+def is_macro_character(c):
+    """Return true if character c can be part of macro name"""
+    if c.isalnum():
+        return True
+    if c == '_':
+        return True
+    return False
+
+
 def is_macro_name(name):
     """
     Return True if Name is a valid RPM macro name
     """
-    if not name[0].isalpha():
+    if not name[0].isalpha() and name[0] != '_':
         return False
     if len(name) < 3:
         return False
-    return name.isalnum()
+    return all(is_macro_character(c) for c in name)

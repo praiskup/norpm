@@ -5,11 +5,10 @@ Spec file parser
 from collections import deque
 
 from norpm.tokenize import tokenize, Special
-from norpm.macro import is_macro_name
+from norpm.macro import is_macro_name, is_macro_character
 from norpm.macrofile import parse_rpmmacros
 
 # pylint: disable=too-many-statements,too-many-branches
-
 
 def parse_specfile(file_contents, _macros):
     """
@@ -69,7 +68,7 @@ def get_parts(string, macros):
                 state = "TEXT"
                 continue
 
-            if c.isalnum():
+            if is_macro_character(c):
                 buffer += c
                 state = "MACRO"
                 continue
@@ -80,7 +79,7 @@ def get_parts(string, macros):
             continue
 
         if state == "MACRO":
-            if c.isalnum():
+            if is_macro_character(c):
                 buffer += c
                 continue
 
@@ -167,7 +166,9 @@ def get_parts(string, macros):
 
             if c == "\n":
                 yield buffer
-                buffer = "\n"
+                # We intentionally eat the newline, and not add this
+                # to the buffer. That's what RPM does.
+                buffer = ""
                 state = "TEXT"
                 continue
 
@@ -212,6 +213,11 @@ def expand_macros(snippets, definitions):
 
 
 def expand_string(string, macros):
+    """Expand macros, return string (not a generator)."""
+    return "".join(list(expand_string_generator(string, macros)))
+
+
+def expand_string_generator(string, macros):
     """ expand macros in string """
     parts = list(get_parts(string, macros))
     todo = deque(parts)
@@ -220,6 +226,14 @@ def expand_string(string, macros):
         if not string.startswith('%'):
             yield string
             continue
+
+        if string.startswith("%global "):
+            _, name, body = string.split(maxsplit=2)
+            expanded_body = expand_string(body, macros)
+            macros[name] = expanded_body
+            yield ""
+            continue
+
         expanded = _expand_snippet(string, macros)
         if expanded == string:
             yield string

@@ -55,14 +55,19 @@ def test_newline():
 def test_definition_parser():
     macros = MacroRegistry()
     assert parse_specfile("blah%define abc foo\n", macros) == \
-            ['blah', '%define abc foo', "\n"]
+            ['blah', '%define abc foo']
     assert parse_specfile(
         "%define abc foo\\\n"
         "bar baz\\\n"
         "end\n",
-        macros) == ['%define abc foo\\\nbar baz\\\nend', "\n"]
+        macros) == ['%define abc foo\\\nbar baz\\\nend']
     assert parse_specfile(
         "%define abc %{expand:foo\n"
         "bar baz\\\n"
         "end\n}\n",
-        macros) == ['%define abc %{expand:foo\nbar baz\\\nend\n}', "\n"]
+        macros) == ['%define abc %{expand:foo\nbar baz\\\nend\n}']
+
+
+def test_parse_multiline_global():
+    macros = MacroRegistry()
+    assert parse_specfile(" %global foo \\\n%bar", macros) == [" ", "%global foo \\\n%bar"]
