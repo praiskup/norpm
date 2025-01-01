@@ -48,7 +48,7 @@ def test_newline():
         " %bar blah\\\n"
         " and \\blah",
         macros)
-    assert macros.to_dict() == {"bar": ("blah and blah",)}
+    assert macros.to_dict() == {"foo": ("\n %bar blah\n and blah",)}
 
 
 def test_backslashed():

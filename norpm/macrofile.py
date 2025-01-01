@@ -57,7 +57,8 @@ def parse_rpmmacros(file_contents, macros):
 
         if ctx.state == "MACRO_NAME":
             if c == Special("\n"):
-                _reset()
+                ctx.state = "VALUE"
+                ctx.value += "\n"
                 continue
 
             if c.isspace():
@@ -88,6 +89,7 @@ def parse_rpmmacros(file_contents, macros):
 
         if ctx.state == "VALUE":
             if c == Special("\n"):
+                ctx.value += "\n"
                 continue
 
             if c == Special('{'):
