@@ -34,3 +34,11 @@ def test_multiline_expansion():
     db["bar"] = "b\nc\nd"
     db["foo"] = "%bar"
     assert "".join(list(expand_string("a %foo e", db))) == "a b\nc\nd e"
+
+
+def test_definition_expansion():
+    db = MacroRegistry()
+    db["bar"] = "content"
+    assert "foo" not in db
+    assert list(expand_string("%define  foo %bar\n%foo", db)) == ["", "\n", "content"]
+    assert db["foo"].value == "%bar"

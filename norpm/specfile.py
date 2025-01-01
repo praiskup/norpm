@@ -6,6 +6,7 @@ from collections import deque
 
 from norpm.tokenize import tokenize, Special
 from norpm.macro import is_macro_name
+from norpm.macrofile import parse_rpmmacros
 
 # pylint: disable=too-many-statements,too-many-branches
 
@@ -179,7 +180,7 @@ def get_parts(string, macros):
 def expand_macro(macroname, definitions, fallback):
     if macroname not in definitions:
         return fallback
-    return definitions[macroname].value()
+    return definitions[macroname].value
 
 
 def _expand_snippet(snippet, definitions):
@@ -195,6 +196,11 @@ def _expand_snippet(snippet, definitions):
 
     if is_macro_name(snippet[1:]):
         return expand_macro(snippet[1:], definitions, snippet)
+
+    keyword, params = snippet[1:].split(" ", 1)
+    if is_definition(keyword):
+        parse_rpmmacros("%" + params, definitions)
+        return ""
 
     return "TODO"
 

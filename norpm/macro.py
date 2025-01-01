@@ -32,6 +32,7 @@ class Macro:
         """Return the last definition of macro as serializable object."""
         return self.stack[-1].to_dict()
 
+    @property
     def value(self):
         """Value of the last macro definition."""
         return self.stack[-1].value
