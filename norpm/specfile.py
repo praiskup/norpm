@@ -18,7 +18,7 @@ def parse_specfile(file_contents, _macros):
     return [i for i in get_parts(file_contents, _macros) if i != ""]
 
 
-def get_parts(string, _macros):
+def get_parts(string, macros):
     """
     Split input string into a macro and non-macro parts.
     """
@@ -77,6 +77,13 @@ def get_parts(string, _macros):
                 state = "MACRO_START"
                 continue
 
+            if c == ' ':
+                macroname = buffer[1:]
+                if macroname in macros and macros[macroname].parametric:
+                    state = "MACRO_PARAMETRIC"
+                    buffer += c
+                    continue
+
             yield buffer
             state = "TEXT"
             buffer = c
@@ -100,6 +107,21 @@ def get_parts(string, _macros):
                 buffer += c
                 yield buffer
                 buffer = ""
+                state = "TEXT"
+                continue
+
+            buffer += c
+            continue
+
+        if state == "MACRO_PARAMETRIC":
+            if c == Special('\n'):
+                yield buffer
+                buffer = ""
+                state = "TEXT"
+                continue
+            if c == "\n":
+                yield buffer
+                buffer = "\n"
                 state = "TEXT"
                 continue
 

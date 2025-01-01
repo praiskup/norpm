@@ -3,11 +3,12 @@ Test rpmmacro parsing in spec-files.
 """
 
 from norpm.specfile import parse_specfile
+from norpm.macro import MacroRegistry
 
 # pylint: disable=missing-function-docstring
 
 def test_basic_spec():
-    macros = {}
+    macros = MacroRegistry()
     assert parse_specfile("", macros) == []
     assert parse_specfile("%foo", macros) == ["%foo"]
     assert parse_specfile("%foo%foo", macros) == ["%foo", "%foo"]
@@ -24,8 +25,18 @@ def test_basic_spec():
     assert parse_specfile("%bar{baz%bar", macros) == ["%bar", "{baz", "%bar"]
 
 
+def test_parametric_line():
+    macros = MacroRegistry()
+    macros["foo"] = ("a %1 b", "")
+    assert macros["foo"].parametric
+    assert parse_specfile("%foo a b c", macros) == ["%foo a b c"]
+    assert parse_specfile("%foo a b c\nb", macros) == ["%foo a b c", "\nb"]
+    assert parse_specfile("%foo a %b c\\\nb", macros) == ["%foo a %b c", "b"]
+    assert parse_specfile("%bar a b c", macros) == ["%bar", " a b c"]
+
+
 def test_newline():
-    macros = {}
+    macros = MacroRegistry()
     assert parse_specfile(
         "abc\n"
         "%foo \n"
