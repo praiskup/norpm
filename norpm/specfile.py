@@ -34,10 +34,10 @@ def get_parts(string, _macros):
 
             yield buffer
             buffer = c
-            state = "MACRO"
+            state = "MACRO_START"
             continue
 
-        if state == "MACRO":
+        if state == "MACRO_START":
             if c == Special("{"):
                 buffer += c
                 state = "MACRO_CURLY"
@@ -56,7 +56,30 @@ def get_parts(string, _macros):
                 state = "TEXT"
                 continue
 
-            buffer += c
+            if c.isalnum():
+                buffer += c
+                state = "MACRO"
+                continue
+
+            yield buffer
+            state = "TEXT"
+            buffer = c
+            continue
+
+        if state == "MACRO":
+            if c.isalnum():
+                buffer += c
+                continue
+
+            if c == "%":
+                yield buffer
+                buffer = "%"
+                state = "MACRO_START"
+                continue
+
+            yield buffer
+            state = "TEXT"
+            buffer = c
             continue
 
         if state == "MACRO_CURLY":

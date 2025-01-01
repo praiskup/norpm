@@ -11,6 +11,8 @@ class Special:
     def isspace(self):
         "mimic str().isspace()"
         return self.char.isspace()
+    def isalnum(self):
+        return False
     def __eq__(self, other):
         if not isinstance(other, Special):
             return False

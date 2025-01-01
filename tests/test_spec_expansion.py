@@ -18,7 +18,6 @@ def test_basic_macro_expansion():
     assert expand_macros(["%foo"], db) == ["baz"]
     assert expand_macros(["%{foo}"], db) == ["baz"]
 
-
 def test_get_parts():
     assert list(get_parts("content", {})) == ["content"]
 
