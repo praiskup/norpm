@@ -117,3 +117,17 @@ def test_invalid_tag():
         "Name: %myname\n",
         "foo\n", '',
     ]
+
+
+def test_expand_tags_in_macro_tricky():
+    """RPM itself needs to do two-pass parsing to handle this"""
+    db = MacroRegistry()
+    assert expand_specfile(
+        "Name: %myname\n"
+        "%define myname foo\n",
+        db,
+    ) == (
+        "Name: %myname\n"
+    )
+    assert db["name"].value == "%myname"
+    assert db["myname"].value == "foo"
