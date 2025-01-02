@@ -49,6 +49,12 @@ class MacroRegistry:
     def __init__(self):
         self.db = {}
 
+    def rpmrc_hack(self):
+        """
+        Define some value for optflags and similar.
+        """
+        self["optflags"] = "-O2 -g3"
+
     def __getitem__(self, name):
         return self.db[name]
 

@@ -28,3 +28,9 @@ def test_macro_call_parser():
     assert pc("%{?!foo: alt }") == (True, "foo", {'?', '!'}, None, ' alt ')
     assert pc("%{!foo: param }") == (True, "foo", {'!'}, ' param ', None)
     assert pc("%{?!bar}") == (True, "bar", {'?', '!'}, None, None)
+
+
+def test_rpmrc_hack():
+    db = MacroRegistry()
+    db.rpmrc_hack()
+    assert db["optflags"].value == "-O2 -g3"
