@@ -100,3 +100,76 @@ def is_macro_name(name):
     if len(name) < 3:
         return False
     return all(is_macro_character(c) for c in name)
+
+
+def parse_macro_call(call):
+    """Given a macro call, return 4-ary
+        (success, name, conditionals, params)
+    Where SUCCESS is True/False, depending if the parsing was done correctly.
+    NAME is the macro name being called.
+    CONDITIONALS is a set of '?' or '!' characters.
+    PARAMS are optional parameters
+    ALT is alternative text after colon
+    """
+
+
+    # %macro
+    # %?macro
+    # %!?macro # empty
+    # %{macro}
+    # %{?macro}  %{?macro:foo}  # different for parametrized
+    # %{!?macro} %{!?macro:foo}
+    # %{macro args}
+    # %{?macro args}
+
+    success = True
+
+    if call.startswith("%{"):
+        call = call[2:-1]
+
+    conditionals = set()
+    name = ""
+    params = None
+    alt = None
+
+    state = 'COND'
+    for c in call:
+        if state == 'COND':
+            if c in '?!':
+                conditionals.add(c)
+                continue
+            if c.isspace():
+                success = False
+                break
+            if is_macro_character(c):
+                name += c
+                state = 'NAME'
+                continue
+        if state == 'NAME':
+            if is_macro_character(c):
+                name += c
+                continue
+
+            if c == ':':
+                if '?' in conditionals:
+                    state = 'ALT'
+                    alt = ""
+                    continue
+                params = ""
+                state = 'PARAMS'
+                continue
+
+            if c.isspace():
+                state = 'PARAMS'
+                params = ""
+                continue
+
+        if state == 'PARAMS':
+            params += c
+            continue
+
+        if state == 'ALT':
+            alt += c
+            continue
+
+    return success, name, conditionals, params, alt

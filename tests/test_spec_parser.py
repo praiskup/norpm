@@ -77,3 +77,4 @@ def test_tricky_macros():
     macros = MacroRegistry()
     assert parse_specfile(" %??!!foo ", macros) == [" ", "%??!!foo", " "]
     assert parse_specfile("%??!!foo! ", macros) == ["%??!!foo", "! "]
+    assert parse_specfile("%??!!foo: ", macros) == ["%??!!foo", ": "]

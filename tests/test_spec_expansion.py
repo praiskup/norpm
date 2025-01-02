@@ -154,3 +154,15 @@ def test_tags_parsed_only_in_preamble(terminator):
     )
     assert db["name"].value == "python-foo"
     assert "version" not in db
+
+
+def test_cond_expand():
+    db = MacroRegistry()
+    db["foo"] = "10"
+    assert expand_specfile("%{?foo}", db) == "10"
+    assert expand_specfile("%{!?foo}", db) == ""
+    assert expand_specfile("%{?foo:a}", db) == "a"
+    assert expand_specfile("%{!?foo:a}", db) == ""
+    assert expand_specfile("%{?bar}", db) == ""
+    assert expand_specfile("%{?!bar}", db) == ""
+    assert expand_specfile("%{?!bar:a}", db) == "a"

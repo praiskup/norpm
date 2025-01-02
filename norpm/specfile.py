@@ -5,7 +5,7 @@ Spec file parser
 from collections import deque
 
 from norpm.tokenize import tokenize, Special
-from norpm.macro import is_macro_name, is_macro_character
+from norpm.macro import is_macro_name, is_macro_character, parse_macro_call
 from norpm.macrofile import parse_rpmmacros
 
 # pylint: disable=too-many-statements,too-many-branches
@@ -202,25 +202,34 @@ def _expand_snippet(snippet, definitions):
     if not snippet.startswith("%"):
         return snippet
 
-    if snippet.startswith("%{"):
-        if is_macro_name(snippet[2:-1]):
-            return expand_macro(snippet[2:-1], definitions, snippet)
-        # TODO: expand properly
-        return snippet
-
     if is_special(snippet[1:]):
         return snippet
 
-    if is_macro_name(snippet[1:]):
-        return expand_macro(snippet[1:], definitions, snippet)
-
-    keyword, params = snippet[1:].split(" ", 1)
-    if is_definition(keyword):
+    if snippet.startswith('%define ') or snippet.startswith('%global '):
+        _, params = snippet[1:].split(" ", 1)
         parse_rpmmacros("%" + params, definitions)
         return ""
 
-    # TODO: expand properly
-    return snippet
+    success, name, conditionals, params, alt = parse_macro_call(snippet)
+    if not success:
+        return snippet
+
+    if '?' in conditionals:
+        # params ignored
+        defined = name in definitions
+        if '!' in conditionals:
+            if not alt:
+                return ""
+            if not defined:
+                return alt
+            return ""
+
+        if defined and alt:
+            return alt
+
+        return definitions[name].value if defined else ""
+
+    return expand_macro(name, definitions, snippet)
 
 
 def expand_macros(snippets, definitions):
