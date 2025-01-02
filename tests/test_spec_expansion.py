@@ -131,3 +131,26 @@ def test_expand_tags_in_macro_tricky():
     )
     assert db["name"].value == "%myname"
     assert db["myname"].value == "foo"
+
+
+@pytest.mark.parametrize("terminator", ["%package foo", "%prep"])
+def test_tags_parsed_only_in_preamble(terminator):
+    """RPM itself needs to do two-pass parsing to handle this"""
+    db = MacroRegistry()
+    assert expand_specfile(
+        "%define myname python-foo\n"
+        "Name: %myname\n"
+        f"  {terminator} \n"
+        " : hello\n"
+        "preparation\n"
+        "Version: 10\n",
+        db,
+    ) == (
+        "Name: python-foo\n"
+        f"  {terminator} \n"
+        " : hello\n"
+        "preparation\n"
+        "Version: 10\n"
+    )
+    assert db["name"].value == "python-foo"
+    assert "version" not in db

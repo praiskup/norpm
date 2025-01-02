@@ -20,7 +20,7 @@ def parse_specfile(file_contents, _macros):
 
 def is_special(name):
     """Return True if the macro name is a special construct"""
-    special = {"if", "else", "endif", "setup"}
+    special = {"if", "else", "endif", "setup", "package"}
     return name in special
 
 
@@ -193,7 +193,11 @@ def _expand_snippet(snippet, definitions):
     if snippet.startswith("%{"):
         if is_macro_name(snippet[2:-1]):
             return expand_macro(snippet[2:-1], definitions, snippet)
-        return "TODO"
+        # TODO: expand properly
+        return snippet
+
+    if is_special(snippet[1:]):
+        return snippet
 
     if is_macro_name(snippet[1:]):
         return expand_macro(snippet[1:], definitions, snippet)
@@ -203,7 +207,8 @@ def _expand_snippet(snippet, definitions):
         parse_rpmmacros("%" + params, definitions)
         return ""
 
-    return "TODO"
+    # TODO: expand properly
+    return snippet
 
 
 def expand_macros(snippets, definitions):
@@ -238,10 +243,29 @@ def expand_specfile(content, macros):
     return "".join(expand_specfile_generator(content, macros))
 
 
+def line_ends_preamble(line):
+    """Return True if the text line ends the main specfile preamble.
+    """
+    line = line.strip()
+    terminators = [
+        "prep", "build", "install", "description",
+        "generate_buildrequires",
+    ]
+    if any(line.startswith("%"+term) for term in terminators):
+        return True
+    if line.startswith("%package "):
+        return True
+    return False
+
+
 def expand_specfile_generator(content, macros):
     """Expand specfile, parse Name/Version/etc."""
     buffer = ""
+    done = False
     for string in expand_string_generator(content, macros):
+        if done:
+            yield string
+            continue
         buffer += string
         lines = deque(buffer.splitlines(keepends=True))
         if not lines:
@@ -249,6 +273,10 @@ def expand_specfile_generator(content, macros):
         buffer = ""
         while lines:
             line = lines.popleft()
+            if line_ends_preamble(line):
+                done = True
+                yield ''.join([line]+list(lines))
+                continue
             if line and line[-1] == "\n":
                 define_tags_as_macros(line, macros)
                 yield line
