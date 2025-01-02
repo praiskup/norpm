@@ -36,6 +36,7 @@ def get_parts(string, macros):
     """
     state = "TEXT"
     depth = 0
+    conditional_prefix = False
 
     buffer = ""
     for c in tokenize(string):
@@ -73,12 +74,23 @@ def get_parts(string, macros):
                 state = "MACRO"
                 continue
 
+            if c in ['?', '!']:
+                conditional_prefix = True
+                buffer += c
+                state = "MACRO"
+                continue
+
             yield buffer
             state = "TEXT"
             buffer = c
             continue
 
         if state == "MACRO":
+            if conditional_prefix and c in ['?', '!']:
+                buffer += c
+                continue
+            conditional_prefix = False
+
             if is_macro_character(c):
                 buffer += c
                 continue

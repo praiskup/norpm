@@ -71,3 +71,9 @@ def test_definition_parser():
 def test_parse_multiline_global():
     macros = MacroRegistry()
     assert parse_specfile(" %global foo \\\n%bar", macros) == [" ", "%global foo \\\n%bar"]
+
+
+def test_tricky_macros():
+    macros = MacroRegistry()
+    assert parse_specfile(" %??!!foo ", macros) == [" ", "%??!!foo", " "]
+    assert parse_specfile("%??!!foo! ", macros) == ["%??!!foo", "! "]
