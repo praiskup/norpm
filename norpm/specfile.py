@@ -308,10 +308,10 @@ def expand_specfile_generator(content, macros):
 
 def expand_string_generator(string, macros):
     """ expand macros in string """
-    parts = list(get_parts(string, macros))
+    parts = [(0, x) for x in get_parts(string, macros)]
     todo = deque(parts)
     while todo:
-        string = todo.popleft()
+        depth, string = todo.popleft()
         if not string.startswith('%'):
             yield string
             continue
@@ -327,6 +327,11 @@ def expand_string_generator(string, macros):
         if expanded == string:
             yield string
             continue
-        add = [x for x in  list(get_parts(expanded, macros)) if x != ""]
+
+        depth += 1
+        if depth >= 1000:
+            raise RecursionError(f"Macro {string} causes recursion loop")
+
+        add = [(depth, x) for x in list(get_parts(expanded, macros)) if x != ""]
         add.reverse()
         todo.extendleft(add)

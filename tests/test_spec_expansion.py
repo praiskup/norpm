@@ -166,3 +166,23 @@ def test_cond_expand():
     assert expand_specfile("%{?bar}", db) == ""
     assert expand_specfile("%{?!bar}", db) == ""
     assert expand_specfile("%{?!bar:a}", db) == "a"
+
+
+def test_append_via_global():
+    db = MacroRegistry()
+    db["foo"] = "content"
+    assert expand_specfile(
+        "%global foo %foo blah\n"
+        "%foo\n", db) == "content blah\n"
+
+
+def test_recursion_limit():
+    db = MacroRegistry()
+    db["foo"] = "%bar"
+    db["bar"] = "%foo"
+    correct_exception = False
+    try:
+        expand_string("%foo", db)
+    except RecursionError:
+        correct_exception = True
+    assert correct_exception
