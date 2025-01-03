@@ -311,26 +311,26 @@ def expand_string_generator(string, macros):
     parts = [(0, x) for x in get_parts(string, macros)]
     todo = deque(parts)
     while todo:
-        depth, string = todo.popleft()
-        if not string.startswith('%'):
-            yield string
+        depth, buffer = todo.popleft()
+        if not buffer.startswith('%'):
+            yield buffer
             continue
 
-        if string.startswith("%global "):
-            _, name, body = string.split(maxsplit=2)
+        if buffer.startswith("%global "):
+            _, name, body = buffer.split(maxsplit=2)
             expanded_body = expand_string(body, macros)
             macros[name] = expanded_body
             yield ""
             continue
 
-        expanded = _expand_snippet(string, macros)
-        if expanded == string:
-            yield string
+        expanded = _expand_snippet(buffer, macros)
+        if expanded == buffer:
+            yield buffer
             continue
 
         depth += 1
         if depth >= 1000:
-            raise RecursionError(f"Macro {string} causes recursion loop")
+            raise RecursionError(f"Macro {buffer} causes recursion loop")
 
         add = [(depth, x) for x in list(get_parts(expanded, macros)) if x != ""]
         add.reverse()
