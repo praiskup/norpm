@@ -19,16 +19,16 @@ class _CTX():
         self.value = ""
 
 
-def parse_rpmmacros(file_contents, macros):
+def parse_rpmmacros(file_contents, macros, inspec=False):
     """
     Parse string containing '%foo bar' macro definitions, and store
     the definitions to macros registry.
     """
-    for name, value, params in parse_rpmmacros_generator(file_contents):
+    for name, value, params in parse_rpmmacros_generator(file_contents, inspec):
         macros[name] = (value, params)
 
 
-def parse_rpmmacros_generator(file_contents):
+def parse_rpmmacros_generator(file_contents, inspec=False):
     """
     Yield (macroname, value, params) n-aries from macro file definition.
     """
@@ -89,8 +89,14 @@ def parse_rpmmacros_generator(file_contents):
             continue
 
         if ctx.state == "VALUE_START":
-            if c == Special("\n"):
+            if inspec and c == "\n":
                 ctx.value += "\n"
+                ctx.state = "VALUE"
+                continue
+
+            if c == Special("\n"):
+                if not inspec:
+                    ctx.value += "\n"
                 continue
             if c.isspace():
                 continue
@@ -100,7 +106,8 @@ def parse_rpmmacros_generator(file_contents):
 
         if ctx.state == "VALUE":
             if c == Special("\n"):
-                ctx.value += "\n"
+                if not inspec:
+                    ctx.value += "\n"
                 continue
 
             if c == Special('{'):
@@ -114,7 +121,7 @@ def parse_rpmmacros_generator(file_contents):
                 else:
                     ctx.value += c
                 continue
-            if c == '\n':
+            if c == '\n' and not inspec:
                 yield ctx.macroname, ctx.value, ctx.params
                 _reset()
                 continue

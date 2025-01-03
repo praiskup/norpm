@@ -192,3 +192,17 @@ def test_recursion_limit():
     except RecursionError:
         correct_exception = True
     assert correct_exception
+
+
+def test_multiline_define():
+    db = MacroRegistry()
+    assert expand_specfile("""\
+%define blah() \\
+newline
+%define fooo \\\\\\
+ nextline \\\\\\
+  lastline
+%fooo
+""", db) == "nextline   lastline\n"
+    assert db["blah"].value == "\nnewline"
+    assert db["fooo"].value == "nextline   lastline"

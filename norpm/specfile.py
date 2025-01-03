@@ -101,7 +101,7 @@ def get_parts(string, macros):
                 state = "MACRO_START"
                 continue
 
-            if c == ' ':
+            if c in ['\t', ' ']:
                 macroname = buffer[1:]
                 if is_special(macroname) or \
                         macroname in macros and macros[macroname].parametric:
@@ -164,7 +164,7 @@ def get_parts(string, macros):
 
         if state == "MACRO_DEFINITION":
             if c == Special("\n"):
-                buffer += "\\\n"
+                buffer += "\n"
                 continue
 
             if c == Special('{'):
@@ -209,9 +209,9 @@ def _expand_snippet(snippet, definitions):
     if is_special(snippet[1:]):
         return snippet
 
-    if snippet.startswith('%define ') or snippet.startswith('%global '):
-        _, params = snippet[1:].split(" ", 1)
-        parse_rpmmacros("%" + params, definitions)
+    if _isdef_start(snippet):
+        _, params = snippet[1:].split(maxsplit=1)
+        parse_rpmmacros("%" + params, definitions, inspec=True)
         return ""
 
     success, name, conditionals, params, alt = parse_macro_call(snippet)
@@ -310,6 +310,17 @@ def expand_specfile_generator(content, macros):
     yield buffer
 
 
+def _isdef_start(string, keywords=None):
+    if keywords is None:
+        keywords = ["global", "define"]
+    for pfx in keywords:
+        pfx = "%" + pfx
+        if string.startswith(pfx):
+            if string[len(pfx):][0] in ["\t", " "]:
+                return True
+    return False
+
+
 def expand_string_generator(string, macros):
     """ expand macros in string """
     parts = [(0, x) for x in get_parts(string, macros)]
@@ -320,9 +331,9 @@ def expand_string_generator(string, macros):
             yield buffer
             continue
 
-        if buffer.startswith("%global "):
+        if _isdef_start(buffer, ["global"]):
             _, definition = buffer.split(maxsplit=1)
-            for name, body, params in parse_rpmmacros_generator('%' + definition):
+            for name, body, params in parse_rpmmacros_generator('%' + definition, inspec=True):
                 expanded_body = expand_string(body, macros)
                 macros[name] = (expanded_body, params)
                 yield ""

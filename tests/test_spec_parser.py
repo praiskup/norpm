@@ -61,17 +61,20 @@ def test_definition_parser():
         "%define abc foo\\\n"
         "bar baz\\\n"
         "end\n",
-        macros) == ['%define abc foo\\\nbar baz\\\nend']
+        macros) == ['%define abc foo\nbar baz\nend']
     assert parse_specfile(
         "%define abc %{expand:foo\n"
         "bar baz\\\n"
         "end\n}\n",
-        macros) == ['%define abc %{expand:foo\nbar baz\\\nend\n}']
+        macros) == ['%define abc %{expand:foo\nbar baz\nend\n}']
 
 
 def test_parse_multiline_global():
     macros = MacroRegistry()
-    assert parse_specfile(" %global foo \\\n%bar", macros) == [" ", "%global foo \\\n%bar"]
+    assert parse_specfile(" %global foo \\\n%bar", macros) == [" ", "%global foo \n%bar"]
+    assert parse_specfile(" %global foo \\\\\\\n%bar", macros) == [" ", "%global foo \\\n%bar"]
+    macros = MacroRegistry()
+    assert parse_specfile(" %define foo \\\\\\\n%bar", macros) == [" ", "%define foo \\\n%bar"]
 
 
 def test_tricky_macros():
@@ -79,3 +82,8 @@ def test_tricky_macros():
     assert parse_specfile(" %??!!foo ", macros) == [" ", "%??!!foo", " "]
     assert parse_specfile("%??!!foo! ", macros) == ["%??!!foo", "! "]
     assert parse_specfile("%??!!foo: ", macros) == ["%??!!foo", ": "]
+
+
+def test_parse_tabelators():
+    macros = MacroRegistry()
+    assert parse_specfile("%global\tfoo\t\tbar\n", macros) == ["%global\tfoo\t\tbar"]

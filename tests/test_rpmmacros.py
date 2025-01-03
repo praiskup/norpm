@@ -5,7 +5,7 @@ Test basic rpmmacro file parsing.
 # pylint: disable=missing-function-docstring
 
 from norpm.macro import MacroRegistry
-from norpm.macrofile import parse_rpmmacros
+from norpm.macrofile import parse_rpmmacros, parse_rpmmacros_generator
 
 
 def test_basicdef():
@@ -78,3 +78,10 @@ def test_whitespace_start():
     assert macros["test1"].value == '\na'
     assert macros["test2"].value == '\nb'
     assert macros["test3"].value == '\nc'
+
+def test_inspec_parser():
+    parts = list(parse_rpmmacros_generator("%foo \nblah\n", inspec=True))
+    assert parts == [("foo", "\nblah\n", None)]
+
+    parts = list(parse_rpmmacros_generator("%foo() \nblah\n", inspec=True))
+    assert parts == [("foo", "\nblah\n", None)]
