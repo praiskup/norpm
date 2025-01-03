@@ -51,6 +51,7 @@ def test_newline():
         "}}%doh",
         macros) == ['abc\n', '%foo', ' \n',
                     '%{blah: %{foo\n}}', "%doh"]
+    assert parse_specfile("%2\\\n", macros) == ['%2', '\\\n']
 
 def test_definition_parser():
     macros = MacroRegistry()

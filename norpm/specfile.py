@@ -115,8 +115,12 @@ def get_parts(string, macros):
                     continue
 
             yield buffer
+
             state = "TEXT"
-            buffer = c
+            if c == Special("\n"):
+                buffer = "\\\n"
+            else:
+                buffer = str(c)
             continue
 
         if state == "MACRO_CURLY":
