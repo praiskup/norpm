@@ -108,8 +108,6 @@ def is_macro_name(name):
     """
     if not name[0].isalpha() and name[0] != '_':
         return False
-    if len(name) < 3:
-        return False
     return all(is_macro_character(c) for c in name)
 
 
