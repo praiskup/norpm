@@ -89,6 +89,12 @@ def test_expand_underscore():
     assert expand_string("%{_bindir}", db) == "/usr/bin"
 
 
+def test_expand_parametric_definition():
+    db = MacroRegistry()
+    assert expand_string("%global nah(param)\\\na b c\n", db) == ""
+    assert db["nah"].params == "param"
+
+
 @pytest.mark.parametrize("statement", ["%define", "%global"])
 def test_expand_specfile_generator(statement):
     db = MacroRegistry()

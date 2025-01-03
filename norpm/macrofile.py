@@ -21,9 +21,17 @@ class _CTX():
 
 def parse_rpmmacros(file_contents, macros):
     """
-    Parse string containing '%foo bar' macro definitions.
+    Parse string containing '%foo bar' macro definitions, and store
+    the definitions to macros registry.
     """
-    # pylint: disable=too-many-branches,too-many-statements
+    for name, value, params in parse_rpmmacros_generator(file_contents):
+        macros[name] = (value, params)
+
+
+def parse_rpmmacros_generator(file_contents):
+    """
+    Yield (macroname, value, params) n-aries from macro file definition.
+    """
 
     ctx = _CTX()
     ctx.state = "START"
@@ -81,6 +89,9 @@ def parse_rpmmacros(file_contents, macros):
             continue
 
         if ctx.state == "VALUE_START":
+            if c == Special("\n"):
+                ctx.value += "\n"
+                continue
             if c.isspace():
                 continue
             ctx.value += c
@@ -104,7 +115,7 @@ def parse_rpmmacros(file_contents, macros):
                     ctx.value += c
                 continue
             if c == '\n':
-                macros[ctx.macroname] = (ctx.value, ctx.params)
+                yield ctx.macroname, ctx.value, ctx.params
                 _reset()
                 continue
 
@@ -117,4 +128,4 @@ def parse_rpmmacros(file_contents, macros):
             continue
 
     if ctx.state == "VALUE":
-        macros[ctx.macroname] = (ctx.value, ctx.params)
+        yield ctx.macroname, ctx.value, ctx.params

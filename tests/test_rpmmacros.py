@@ -67,3 +67,14 @@ def test_whitespice_before_name():
     macros = MacroRegistry()
     parse_rpmmacros(" % bar baz", macros)
     assert macros.to_dict() == {"bar": ("baz",)}
+
+
+def test_whitespace_start():
+    macros = MacroRegistry()
+    parse_rpmmacros("%test1 \\\na\n", macros)
+    parse_rpmmacros("%test2\\\nb\n", macros)
+    parse_rpmmacros("%test3  \\\nc\n", macros)
+
+    assert macros["test1"].value == '\na'
+    assert macros["test2"].value == '\nb'
+    assert macros["test3"].value == '\nc'

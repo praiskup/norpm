@@ -6,7 +6,7 @@ from collections import deque
 
 from norpm.tokenize import tokenize, Special
 from norpm.macro import is_macro_name, is_macro_character, parse_macro_call
-from norpm.macrofile import parse_rpmmacros
+from norpm.macrofile import parse_rpmmacros, parse_rpmmacros_generator
 
 # pylint: disable=too-many-statements,too-many-branches
 
@@ -321,10 +321,12 @@ def expand_string_generator(string, macros):
             continue
 
         if buffer.startswith("%global "):
-            _, name, body = buffer.split(maxsplit=2)
-            expanded_body = expand_string(body, macros)
-            macros[name] = expanded_body
-            yield ""
+            _, definition = buffer.split(maxsplit=1)
+            for name, body, params in parse_rpmmacros_generator('%' + definition):
+                expanded_body = expand_string(body, macros)
+                macros[name] = (expanded_body, params)
+                yield ""
+
             continue
 
         expanded = _expand_snippet(buffer, macros)

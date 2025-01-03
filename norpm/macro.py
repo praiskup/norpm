@@ -42,6 +42,11 @@ class Macro:
         """True if the latest definition is parametric."""
         return self.stack[-1].params is not None
 
+    @property
+    def params(self):
+        """True if the latest definition is parametric."""
+        return self.stack[-1].params
+
 
 class MacroRegistry:
     """Registry of macro definitions."""
