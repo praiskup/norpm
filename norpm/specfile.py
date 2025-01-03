@@ -4,7 +4,7 @@ Spec file parser
 
 from collections import deque
 
-from norpm.tokenize import tokenize, Special
+from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
 from norpm.macro import is_macro_name, is_macro_character, parse_macro_call
 from norpm.macrofile import parse_rpmmacros, parse_rpmmacros_generator
 
@@ -37,6 +37,7 @@ def get_parts(string, macros):
     state = "TEXT"
     depth = 0
     conditional_prefix = False
+    brackets = None
 
     buffer = ""
     for c in tokenize(string):
@@ -51,7 +52,8 @@ def get_parts(string, macros):
             continue
 
         if state == "MACRO_START":
-            if c == Special("{"):
+            if c in OPENING_BRACKETS:
+                brackets = BRACKET_TYPES[str(c)]
                 buffer += c
                 state = "MACRO_CURLY"
                 continue
@@ -124,20 +126,20 @@ def get_parts(string, macros):
             continue
 
         if state == "MACRO_CURLY":
-            if c == Special('{'):
+            if c == brackets[0]:
                 depth += 1
                 buffer += c
                 continue
 
             if depth:
-                if c == Special('}'):
+                if c == brackets[1]:
                     depth -= 1
                     buffer += c
                 else:
                     buffer += c
                 continue
 
-            if c == Special('}'):
+            if c == brackets[1]:
                 buffer += c
                 yield buffer
                 buffer = ""

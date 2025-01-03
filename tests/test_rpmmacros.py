@@ -56,6 +56,12 @@ def test_backslashed():
     parse_rpmmacros("%foo %{\\}\n}\n", macros)
     assert macros.to_dict() == {"foo": ("%{}\n}",)}
 
+def test_bash_parser():
+    macros = MacroRegistry()
+    parse_rpmmacros("%foo %(echo ahoj)\n", macros)
+    assert macros.to_dict() == {"foo": ("%(echo ahoj)",)}
+    parse_rpmmacros("%bar %(\necho barcontent)\n", macros)
+    assert macros["bar"].value == "%(\necho barcontent)"
 
 def test_ignore_till_eol():
     macros = MacroRegistry()
@@ -85,3 +91,25 @@ def test_inspec_parser():
 
     parts = list(parse_rpmmacros_generator("%foo() \nblah\n", inspec=True))
     assert parts == [("foo", "\nblah\n", None)]
+
+def test_forgemeta_parser():
+    macro_def = """\
+%forgemeta(z:isva) %{lua:
+local      fedora = require "fedora.common"
+local       forge = require "fedora.srpm.forge"
+local     verbose =  rpm.expand("%{-v}") ~= ""
+local informative =  rpm.expand("%{-i}") ~= ""
+local      silent =  rpm.expand("%{-s}") ~= ""
+local  processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
+if processall then
+  for _,s in pairs(fedora.getsuffixes("forgeurl")) do
+    forge.meta(s,verbose,informative,silent)
+  end
+else
+  forge.meta(rpm.expand("%{-z*}"),verbose,informative,silent)
+end
+}
+%blah nah
+"""
+    defs = list(parse_rpmmacros_generator(macro_def))
+    len(defs) == 2

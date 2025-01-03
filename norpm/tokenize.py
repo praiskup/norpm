@@ -23,6 +23,13 @@ class Special:
         return str(self) + str(other)
 
 
+BRACKET_TYPES = {
+    "{": (Special("{"), Special("}")),
+    "(": (Special("("), Special(")")),
+}
+
+OPENING_BRACKETS = [pair[0] for _, pair in BRACKET_TYPES.items()]
+
 def tokenize(string):
     """
     Return either character or special token.
@@ -39,7 +46,7 @@ def tokenize(string):
             if c == '\\':
                 backslash_mode = True
                 continue
-            if c in '{}':
+            if c in '{}()':
                 yield Special(c)
                 continue
             yield c

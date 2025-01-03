@@ -4,7 +4,7 @@ Parse macro file into a "macroname = unexpanded value" dictionary
 
 import logging
 
-from norpm.tokenize import tokenize, Special
+from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -39,6 +39,7 @@ def parse_rpmmacros_generator(file_contents, inspec=False):
     ctx.value = ""
     ctx.params = None
     depth = 0
+    brackets = None
 
     def _reset():
         ctx.state = "START"
@@ -74,7 +75,7 @@ def parse_rpmmacros_generator(file_contents, inspec=False):
                 ctx.state = "VALUE_START"
                 continue
 
-            if c == '(':
+            if c == Special('('):
                 ctx.state = 'PARAMS'
                 continue
 
@@ -82,7 +83,7 @@ def parse_rpmmacros_generator(file_contents, inspec=False):
             continue
 
         if ctx.state == 'PARAMS':
-            if c == ')':
+            if c == Special(')'):
                 ctx.state = "VALUE_START"
                 continue
             ctx.params = ctx.params + c if ctx.params else c
@@ -110,12 +111,19 @@ def parse_rpmmacros_generator(file_contents, inspec=False):
                     ctx.value += "\n"
                 continue
 
-            if c == Special('{'):
+            if depth == 0 and c in OPENING_BRACKETS:
+                brackets = BRACKET_TYPES[str(c)]
                 depth += 1
                 ctx.value += c
                 continue
+
+            if depth and c == brackets[0]:
+                depth += 1
+                ctx.value += c
+                continue
+
             if depth:
-                if c == Special('}'):
+                if c == brackets[1]:
                     depth -= 1
                     ctx.value += c
                 else:
