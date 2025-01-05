@@ -1,19 +1,20 @@
-RPM macro expansion written in Python
-=====================================
+RPM Macro Expansion in Python
+=============================
 
-Parse RPM macro files and spec files, and expand macros in a safe manner—without
-the possible Turing Complete side-effects.
+Parse RPM macro files and spec files, and expand macros safely—without the
+potential Turing Complete side effects.
 
-This is a self standing library that depends only on the standard Python
-library.
+This is a standalone library that depends only on the standard Python library.
 
-How to use it
+How to Use It
 -------------
 
+```bash
 $ norpm-expand-specfile --specfile SPEC --expand-string '%version %{!?epoch:(none)}'
 1.1.1 (none)
+```
 
-Directly from Python, one may use:
+Directly from Python, you can use:
 
 ```python
 from norpm.macrofile import system_macro_registry
@@ -26,10 +27,10 @@ with open("my.spec", "r", encoding="utf8") as fd:
     print("Version: ", registry["version"].value)
 ```
 
-TODO
-====
+TODOs
+-----
 
-There are many things waiting to be implemented.  Contributions are welcome!
+There are many features yet to be implemented. Contributions are highly encouraged!
 
 - [ ] Parametric macro definitions + calls, like `%macro arg1 arg2\eol`
 - [ ] %if/%ifarch, %else statements
