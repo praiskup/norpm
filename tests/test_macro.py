@@ -28,7 +28,7 @@ def test_macro_call_parser():
     assert pc("%{?!bar}") == (True, "bar", {'?', '!'}, None, None)
 
 
-def test_rpmrc_hack():
+def test_known_hacks():
     db = MacroRegistry()
-    db.rpmrc_hack()
+    db.known_norpm_hacks()
     assert db["optflags"].value == "-O2 -g3"

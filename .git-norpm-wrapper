@@ -1,0 +1,18 @@
+#! /bin/sh
+
+# Execute scripts directly from command-line.
+
+base=$(basename "$0")
+base=${base//norpm-/}
+base=${base//-/_}
+file="norpm/cli/$base.py"
+
+
+die() { echo >&2 "fatal: $*"; exit 1; }
+
+cd "$(dirname "$(readlink -f "$0")")"
+
+test -e "$file" || die "$file not found"
+
+exec python3 -c "import norpm.cli.$base; import sys; sys.argv[0] = '$base'; norpm.cli.$base._main()" "$@"
+

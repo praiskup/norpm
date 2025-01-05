@@ -53,6 +53,12 @@ def test_definition_expansion():
     assert db["foo"].value == "%bar"
 
 
+def test_definition_expansion_trailing_newline():
+    db = MacroRegistry()
+    db["foo"] = "content"
+    assert list(specfile_expand_string_generator("%{foo}\n", db)) == ["", "content", "\n"]
+
+
 def test_global_expansion():
     db = MacroRegistry()
     db["bar"] = "content"

@@ -2,9 +2,11 @@
 Parse macro file into a "macroname = unexpanded value" dictionary
 """
 
+import glob
 import logging
 from dataclasses import dataclass
 
+from norpm.macro import MacroRegistry
 from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
 
 log = logging.getLogger(__name__)
@@ -147,3 +149,27 @@ def macrofile_split_generator(file_contents, inspec=False):
 
     if ctx.state == "VALUE":
         yield ctx.macroname, ctx.value, ctx.params
+
+
+def _get_macro_files():
+    patterns = [
+        "/usr/lib/rpm/macros",
+        "/usr/lib/rpm/redhat/macros",
+        "/usr/lib/rpm/macros.d/macros.*",
+    ]
+    files = []
+    for pattern in patterns:
+        for file in glob.glob(pattern):
+            files.append(file)
+    return files
+
+
+def system_macro_registry():
+    """Create and return a new MacroRegistry() object fed with the macros
+    defined on the system."""
+    registry = MacroRegistry()
+
+    for file in _get_macro_files():
+        with open(file, "r", encoding="utf-8") as fd:
+            macrofile_parse(fd.read(), registry)
+    return registry

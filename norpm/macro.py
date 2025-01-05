@@ -54,11 +54,16 @@ class MacroRegistry:
     def __init__(self):
         self.db = {}
 
-    def rpmrc_hack(self):
+    def known_norpm_hacks(self):
         """
-        Define some value for optflags and similar.
+        Define some value for %optflags and similar.
         """
+        # The %optflags are defined using rpmrc, and some packages do things
+        # like '%global optflags --foo %optflags' leading to recursion error.
         self["optflags"] = "-O2 -g3"
+        # The %goname method is typically defined by %gometa, which is a
+        # complicated lua script that we don't interpret.
+        self["goname"] = "NORPM_HACK_NO_GONAME"
 
     def __getitem__(self, name):
         return self.db[name]
