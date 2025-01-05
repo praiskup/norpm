@@ -5,14 +5,14 @@ Test basic rpmmacro file parsing.
 # pylint: disable=missing-function-docstring
 
 from norpm.macro import MacroRegistry
-from norpm.macrofile import parse_rpmmacros, parse_rpmmacros_generator
+from norpm.macrofile import macrofile_parse, macrofile_split_generator
 
 
 def test_basicdef():
     macros = MacroRegistry()
-    parse_rpmmacros("%foo bar", macros)
+    macrofile_parse("%foo bar", macros)
     assert macros.to_dict() == {"foo": ("bar",)}
-    parse_rpmmacros(
+    macrofile_parse(
         "%baz bar %{\n"
         " foo}\n",
         macros
@@ -21,7 +21,7 @@ def test_basicdef():
         "foo": ("bar",),
         "baz": ("bar %{\n foo}",),
     }
-    parse_rpmmacros(
+    macrofile_parse(
         "%blah(p:) %x %y -p*",
         macros
     )
@@ -37,13 +37,13 @@ def test_basicdef():
 
 def test_empty():
     macros = MacroRegistry()
-    parse_rpmmacros("", macros)
+    macrofile_parse("", macros)
     assert macros.empty
 
 
 def test_newline():
     macros = MacroRegistry()
-    parse_rpmmacros(
+    macrofile_parse(
         "%foo\\\n"
         " %bar blah\\\n"
         " and \\blah",
@@ -53,43 +53,43 @@ def test_newline():
 
 def test_backslashed():
     macros = MacroRegistry()
-    parse_rpmmacros("%foo %{\\}\n}\n", macros)
+    macrofile_parse("%foo %{\\}\n}\n", macros)
     assert macros.to_dict() == {"foo": ("%{}\n}",)}
 
 def test_bash_parser():
     macros = MacroRegistry()
-    parse_rpmmacros("%foo %(echo ahoj)\n", macros)
+    macrofile_parse("%foo %(echo ahoj)\n", macros)
     assert macros.to_dict() == {"foo": ("%(echo ahoj)",)}
-    parse_rpmmacros("%bar %(\necho barcontent)\n", macros)
+    macrofile_parse("%bar %(\necho barcontent)\n", macros)
     assert macros["bar"].value == "%(\necho barcontent)"
 
 def test_ignore_till_eol():
     macros = MacroRegistry()
-    parse_rpmmacros("foo %bar baz\nblah\n%recover foo", macros)
+    macrofile_parse("foo %bar baz\nblah\n%recover foo", macros)
     assert macros.to_dict() == {"recover": ("foo",)}
 
 
 def test_whitespice_before_name():
     macros = MacroRegistry()
-    parse_rpmmacros(" % bar baz", macros)
+    macrofile_parse(" % bar baz", macros)
     assert macros.to_dict() == {"bar": ("baz",)}
 
 
 def test_whitespace_start():
     macros = MacroRegistry()
-    parse_rpmmacros("%test1 \\\na\n", macros)
-    parse_rpmmacros("%test2\\\nb\n", macros)
-    parse_rpmmacros("%test3  \\\nc\n", macros)
+    macrofile_parse("%test1 \\\na\n", macros)
+    macrofile_parse("%test2\\\nb\n", macros)
+    macrofile_parse("%test3  \\\nc\n", macros)
 
     assert macros["test1"].value == '\na'
     assert macros["test2"].value == '\nb'
     assert macros["test3"].value == '\nc'
 
 def test_inspec_parser():
-    parts = list(parse_rpmmacros_generator("%foo \nblah\n", inspec=True))
+    parts = list(macrofile_split_generator("%foo \nblah\n", inspec=True))
     assert parts == [("foo", "\nblah\n", None)]
 
-    parts = list(parse_rpmmacros_generator("%foo() \nblah\n", inspec=True))
+    parts = list(macrofile_split_generator("%foo() \nblah\n", inspec=True))
     assert parts == [("foo", "\nblah\n", None)]
 
 def test_forgemeta_parser():
@@ -111,5 +111,5 @@ end
 }
 %blah nah
 """
-    defs = list(parse_rpmmacros_generator(macro_def))
+    defs = list(macrofile_split_generator(macro_def))
     len(defs) == 2

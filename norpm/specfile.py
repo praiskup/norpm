@@ -5,32 +5,32 @@ Spec file parser
 from collections import deque
 
 from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
-from norpm.macro import is_macro_name, is_macro_character, parse_macro_call
-from norpm.macrofile import parse_rpmmacros, parse_rpmmacros_generator
+from norpm.macro import is_macro_character, parse_macro_call
+from norpm.macrofile import macrofile_parse, macrofile_split_generator
 
 # pylint: disable=too-many-statements,too-many-branches
 
-def parse_specfile(file_contents, _macros):
+def specfile_split(file_contents, macros):
     """
     Parse file_contents string into a list of parts, macros and raw string
     snippets.
     """
-    return [i for i in get_parts(file_contents, _macros) if i != ""]
+    return [i for i in specfile_split_generator(file_contents, macros) if i != ""]
 
 
-def is_special(name):
+def _is_special(name):
     """Return True if the macro name is a special construct"""
     special = {"if", "else", "endif", "setup", "package"}
     return name in special
 
 
-def is_definition(name):
+def _is_definition(name):
     """Return True if the Name is a macro definition keyword"""
     special = {"define", "global"}
     return name in special
 
 
-def get_parts(string, macros):
+def specfile_split_generator(string, macros):
     """
     Split input string into a macro and non-macro parts.
     """
@@ -105,13 +105,13 @@ def get_parts(string, macros):
 
             if c in ['\t', ' ']:
                 macroname = buffer[1:]
-                if is_special(macroname) or \
+                if _is_special(macroname) or \
                         macroname in macros and macros[macroname].parametric:
                     state = "MACRO_PARAMETRIC"
                     buffer += c
                     continue
 
-                if is_definition(macroname):
+                if _is_definition(macroname):
                     state = "MACRO_DEFINITION"
                     buffer += c
                     continue
@@ -196,24 +196,18 @@ def get_parts(string, macros):
     yield buffer
 
 
-def expand_macro(macroname, definitions, fallback):
-    if macroname not in definitions:
-        return fallback
-    return definitions[macroname].value
-
-
 def _expand_snippet(snippet, definitions):
     if snippet in ['%', '%%']:
         return '%'
     if not snippet.startswith("%"):
         return snippet
 
-    if is_special(snippet[1:]):
+    if _is_special(snippet[1:]):
         return snippet
 
     if _isdef_start(snippet):
         _, params = snippet[1:].split(maxsplit=1)
-        parse_rpmmacros("%" + params, definitions, inspec=True)
+        macrofile_parse("%" + params, definitions, inspec=True)
         return ""
 
     success, name, conditionals, params, alt = parse_macro_call(snippet)
@@ -235,21 +229,25 @@ def _expand_snippet(snippet, definitions):
 
         return definitions[name].value if defined else ""
 
-    return expand_macro(name, definitions, snippet)
+    return definitions.get_macro_value(name, snippet)
 
 
-def expand_macros(snippets, definitions):
-    "expand macros in parse_specfile() output"
-
+def specfile_expand_strings(snippets, definitions):
+    """Given specfile snippets (list of strings, output from
+    specfile_split_generator typically), expand the snippets that seem to be
+    macro calls.
+    """
     return [_expand_snippet(s, definitions) for s in snippets]
 
 
-def expand_string(string, macros):
-    """Expand macros, return string (not a generator)."""
-    return "".join(list(expand_string_generator(string, macros)))
+def specfile_expand_string(string, macros):
+    """Split string to snippets, and expand those that are macro calls.  This
+    method returns string again.  Specfile tags are not interpreted.
+    """
+    return "".join(list(specfile_expand_string_generator(string, macros)))
 
 
-def define_tags_as_macros(line, macros):
+def _define_tags_as_macros(line, macros):
     """Define macros from specfile tags, like %name from Name:"""
     try:
         tag_raw, definition = line.split(":", maxsplit=1)
@@ -265,9 +263,11 @@ def define_tags_as_macros(line, macros):
         macros[tag] = definition.strip()
 
 
-def expand_specfile(content, macros):
-    """Expand specfile as string"""
-    return "".join(expand_specfile_generator(content, macros))
+def specfile_expand(content, macros):
+    """Expand specfile content (string), return string.  Tags (like Name:) are
+    interpreted.  See specfile_expand_generator().
+    """
+    return "".join(specfile_expand_generator(content, macros))
 
 
 def line_ends_preamble(line):
@@ -285,11 +285,15 @@ def line_ends_preamble(line):
     return False
 
 
-def expand_specfile_generator(content, macros):
-    """Expand specfile, parse Name/Version/etc."""
+def specfile_expand_generator(content, macros):
+    """Generator method.  Expand specfile content (string), and yield parts as
+    they are interpreted and expanded. The specfile preamble is parsed
+    line-by-line, and if tags like Name/Version/Epoch/etc. are observed,
+    corresponding (%name, %version, %release, ...) macros are defined.
+    """
     buffer = ""
     done = False
-    for string in expand_string_generator(content, macros):
+    for string in specfile_expand_string_generator(content, macros):
         if done:
             yield string
             continue
@@ -305,7 +309,7 @@ def expand_specfile_generator(content, macros):
                 yield ''.join([line]+list(lines))
                 continue
             if line and line[-1] == "\n":
-                define_tags_as_macros(line, macros)
+                _define_tags_as_macros(line, macros)
                 yield line
             else:
                 buffer = line
@@ -323,9 +327,9 @@ def _isdef_start(string, keywords=None):
     return False
 
 
-def expand_string_generator(string, macros):
-    """ expand macros in string """
-    parts = [(0, x) for x in get_parts(string, macros)]
+def specfile_expand_string_generator(string, macros):
+    """Split the string to snippets, and expand parts that are macro calls."""
+    parts = [(0, x) for x in specfile_split_generator(string, macros)]
     todo = deque(parts)
     while todo:
         depth, buffer = todo.popleft()
@@ -335,8 +339,8 @@ def expand_string_generator(string, macros):
 
         if _isdef_start(buffer, ["global"]):
             _, definition = buffer.split(maxsplit=1)
-            for name, body, params in parse_rpmmacros_generator('%' + definition, inspec=True):
-                expanded_body = expand_string(body, macros)
+            for name, body, params in macrofile_split_generator('%' + definition, inspec=True):
+                expanded_body = specfile_expand_string(body, macros)
                 macros[name] = (expanded_body, params)
                 yield ""
 
@@ -351,6 +355,6 @@ def expand_string_generator(string, macros):
         if depth >= 1000:
             raise RecursionError(f"Macro {buffer} causes recursion loop")
 
-        add = [(depth, x) for x in list(get_parts(expanded, macros)) if x != ""]
+        add = [(depth, x) for x in list(specfile_split_generator(expanded, macros)) if x != ""]
         add.reverse()
         todo.extendleft(add)

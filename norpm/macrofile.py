@@ -3,6 +3,7 @@ Parse macro file into a "macroname = unexpanded value" dictionary
 """
 
 import logging
+from dataclasses import dataclass
 
 from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
 
@@ -10,7 +11,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-
+@dataclass
 class _CTX():
     def __init__(self):
         self.state = "START"
@@ -19,19 +20,21 @@ class _CTX():
         self.value = ""
 
 
-def parse_rpmmacros(file_contents, macros, inspec=False):
+def macrofile_parse(file_contents, macros, inspec=False):
+    """Parse macro file (in a string format, containing '%foo bar' macro
+    definitions), and store the definitions to macros registry.  See
+    macrofile_split_generator() what inspec=True means.
     """
-    Parse string containing '%foo bar' macro definitions, and store
-    the definitions to macros registry.
-    """
-    for name, value, params in parse_rpmmacros_generator(file_contents, inspec):
+    for name, value, params in macrofile_split_generator(file_contents, inspec):
         macros[name] = (value, params)
 
 
-def parse_rpmmacros_generator(file_contents, inspec=False):
+def macrofile_split_generator(file_contents, inspec=False):
+    """Generator method.  Yield (macroname, value, params) n-aries from macro
+    file definition file_contents.  If inspec=True is defined, the `%define` and
+    `%global` statements are parsed (leads to a different EOL interpretation).
     """
-    Yield (macroname, value, params) n-aries from macro file definition.
-    """
+    # pylint: disable=too-many-branches,too-many-statements
 
     ctx = _CTX()
     ctx.state = "START"

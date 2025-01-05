@@ -92,6 +92,15 @@ class MacroRegistry:
         """Return True if no macro is defined."""
         return not self.db
 
+    def get_macro_value(self, name, fallback):
+        """Return the macro definition string, or return fallback if not
+        defined.
+        """
+        try:
+            definition = self[name].value
+            return definition
+        except KeyError:
+            return fallback
 
 def is_macro_character(c):
     """Return true if character c can be part of macro name"""
@@ -121,15 +130,7 @@ def parse_macro_call(call):
     ALT is alternative text after colon
     """
 
-
-    # %macro
-    # %?macro
-    # %!?macro # empty
-    # %{macro}
-    # %{?macro}  %{?macro:foo}  # different for parametrized
-    # %{!?macro} %{!?macro:foo}
-    # %{macro args}
-    # %{?macro args}
+    # pylint: disable=too-many-branches
 
     success = True
 

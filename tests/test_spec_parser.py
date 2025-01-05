@@ -2,27 +2,27 @@
 Test rpmmacro parsing in spec-files.
 """
 
-from norpm.specfile import parse_specfile
+from norpm.specfile import specfile_split
 from norpm.macro import MacroRegistry
 
 # pylint: disable=missing-function-docstring
 
 def test_basic_spec():
     macros = MacroRegistry()
-    assert parse_specfile("", macros) == []
-    assert parse_specfile("%foo", macros) == ["%foo"]
-    assert parse_specfile("%foo%foo", macros) == ["%foo", "%foo"]
-    assert parse_specfile("%{foo}%foo", macros) == ["%{foo}", "%foo"]
-    assert parse_specfile("%{foo}foo", macros) == ["%{foo}", "foo"]
-    assert parse_specfile("%{bar}", macros) == ["%{bar}"]
-    assert parse_specfile("%foo %{bar} %{doh}", macros) == ["%foo", " ", "%{bar}", " ", "%{doh}"]
-    assert parse_specfile("% %%", macros) == ["%", " ", "%%"]
-    assert parse_specfile("a %{?bar:%{configure}}", macros) == ["a ", "%{?bar:%{configure}}"]
-    assert parse_specfile(" foo%bar@bar", macros) == [" foo", "%bar", "@bar"]
-    assert parse_specfile("%bar%{bar}%bar", macros) == ["%bar", "%{bar}", "%bar"]
-    assert parse_specfile("%@bar", macros) == ["%", "@bar"]
-    assert parse_specfile("%bar{baz}", macros) == ["%bar", "{baz}"]
-    assert parse_specfile("%bar{baz%bar", macros) == ["%bar", "{baz", "%bar"]
+    assert specfile_split("", macros) == []
+    assert specfile_split("%foo", macros) == ["%foo"]
+    assert specfile_split("%foo%foo", macros) == ["%foo", "%foo"]
+    assert specfile_split("%{foo}%foo", macros) == ["%{foo}", "%foo"]
+    assert specfile_split("%{foo}foo", macros) == ["%{foo}", "foo"]
+    assert specfile_split("%{bar}", macros) == ["%{bar}"]
+    assert specfile_split("%foo %{bar} %{doh}", macros) == ["%foo", " ", "%{bar}", " ", "%{doh}"]
+    assert specfile_split("% %%", macros) == ["%", " ", "%%"]
+    assert specfile_split("a %{?bar:%{configure}}", macros) == ["a ", "%{?bar:%{configure}}"]
+    assert specfile_split(" foo%bar@bar", macros) == [" foo", "%bar", "@bar"]
+    assert specfile_split("%bar%{bar}%bar", macros) == ["%bar", "%{bar}", "%bar"]
+    assert specfile_split("%@bar", macros) == ["%", "@bar"]
+    assert specfile_split("%bar{baz}", macros) == ["%bar", "{baz}"]
+    assert specfile_split("%bar{baz%bar", macros) == ["%bar", "{baz", "%bar"]
 
 
 def test_parametric_line():
@@ -31,38 +31,38 @@ def test_parametric_line():
     macros["bar"] = "a %1 b"
     assert macros["foo"].parametric
     assert not macros["bar"].parametric
-    assert parse_specfile("%foo a b c", macros) == ["%foo a b c"]
-    assert parse_specfile("%foo a b c\nb", macros) == ["%foo a b c", "\nb"]
-    assert parse_specfile("%foo a %b c\\\nb", macros) == ["%foo a %b c", "b"]
-    assert parse_specfile("%bar a b c", macros) == ["%bar", " a b c"]
+    assert specfile_split("%foo a b c", macros) == ["%foo a b c"]
+    assert specfile_split("%foo a b c\nb", macros) == ["%foo a b c", "\nb"]
+    assert specfile_split("%foo a %b c\\\nb", macros) == ["%foo a %b c", "b"]
+    assert specfile_split("%bar a b c", macros) == ["%bar", " a b c"]
 
 
 def test_special():
     macros = MacroRegistry()
-    assert parse_specfile("%if %foo", macros) == ["%if %foo"]
+    assert specfile_split("%if %foo", macros) == ["%if %foo"]
 
 
 def test_newline():
     macros = MacroRegistry()
-    assert parse_specfile(
+    assert specfile_split(
         "abc\n"
         "%foo \n"
         "%{blah: %{foo\n"
         "}}%doh",
         macros) == ['abc\n', '%foo', ' \n',
                     '%{blah: %{foo\n}}', "%doh"]
-    assert parse_specfile("%2\\\n", macros) == ['%2', '\\\n']
+    assert specfile_split("%2\\\n", macros) == ['%2', '\\\n']
 
 def test_definition_parser():
     macros = MacroRegistry()
-    assert parse_specfile("blah%define abc foo\n", macros) == \
+    assert specfile_split("blah%define abc foo\n", macros) == \
             ['blah', '%define abc foo']
-    assert parse_specfile(
+    assert specfile_split(
         "%define abc foo\\\n"
         "bar baz\\\n"
         "end\n",
         macros) == ['%define abc foo\nbar baz\nend']
-    assert parse_specfile(
+    assert specfile_split(
         "%define abc %{expand:foo\n"
         "bar baz\\\n"
         "end\n}\n",
@@ -71,19 +71,19 @@ def test_definition_parser():
 
 def test_parse_multiline_global():
     macros = MacroRegistry()
-    assert parse_specfile(" %global foo \\\n%bar", macros) == [" ", "%global foo \n%bar"]
-    assert parse_specfile(" %global foo \\\\\\\n%bar", macros) == [" ", "%global foo \\\n%bar"]
+    assert specfile_split(" %global foo \\\n%bar", macros) == [" ", "%global foo \n%bar"]
+    assert specfile_split(" %global foo \\\\\\\n%bar", macros) == [" ", "%global foo \\\n%bar"]
     macros = MacroRegistry()
-    assert parse_specfile(" %define foo \\\\\\\n%bar", macros) == [" ", "%define foo \\\n%bar"]
+    assert specfile_split(" %define foo \\\\\\\n%bar", macros) == [" ", "%define foo \\\n%bar"]
 
 
 def test_tricky_macros():
     macros = MacroRegistry()
-    assert parse_specfile(" %??!!foo ", macros) == [" ", "%??!!foo", " "]
-    assert parse_specfile("%??!!foo! ", macros) == ["%??!!foo", "! "]
-    assert parse_specfile("%??!!foo: ", macros) == ["%??!!foo", ": "]
+    assert specfile_split(" %??!!foo ", macros) == [" ", "%??!!foo", " "]
+    assert specfile_split("%??!!foo! ", macros) == ["%??!!foo", "! "]
+    assert specfile_split("%??!!foo: ", macros) == ["%??!!foo", ": "]
 
 
 def test_parse_tabelators():
     macros = MacroRegistry()
-    assert parse_specfile("%global\tfoo\t\tbar\n", macros) == ["%global\tfoo\t\tbar"]
+    assert specfile_split("%global\tfoo\t\tbar\n", macros) == ["%global\tfoo\t\tbar"]
