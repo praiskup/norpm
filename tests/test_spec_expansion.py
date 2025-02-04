@@ -215,3 +215,26 @@ newline
 """, db) == "nextline   lastline\n"
     assert db["blah"].value == "\nnewline"
     assert db["fooo"].value == "nextline   lastline"
+
+
+def test_conditional_negation():
+    db = MacroRegistry()
+    db["m1"] = "%{!?bar:true}"
+    db["m2"] = "%{!?!bar:true}"
+    db["m3"] = "%{!!?!bar:true}"
+    db["m4"] = "%{!!?!!bar:true}"
+    db["m5"] = "%!!?bar"
+    db["m6"] = "%!!?!bar"
+    assert specfile_expand_string("%m1", db) == "true"
+    assert specfile_expand_string("%m2", db) == ""
+    assert specfile_expand_string("%m3", db) == "true"
+    assert specfile_expand_string("%m4", db) == ""
+    assert specfile_expand_string("%m5", db) == ""
+    assert specfile_expand_string("%m6", db) == ""
+    db["bar"] = "foo"
+    assert specfile_expand_string("%m1", db) == ""
+    assert specfile_expand_string("%m2", db) == "true"
+    assert specfile_expand_string("%m3", db) == ""
+    assert specfile_expand_string("%m4", db) == "true"
+    assert specfile_expand_string("%m5", db) == "foo"
+    assert specfile_expand_string("%m6", db) == ""
