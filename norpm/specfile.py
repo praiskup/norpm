@@ -261,6 +261,7 @@ def _define_tags_as_macros(line, macros):
         "epoch",
     ]:
         macros[tag] = definition.strip()
+        macros[tag.upper()] = definition.strip()
 
 
 def specfile_expand(content, macros):
