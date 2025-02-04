@@ -150,8 +150,11 @@ def parse_macro_call(call):
     state = 'COND'
     for c in call:
         if state == 'COND':
-            if c in '?!':
+            if c in '?':
                 conditionals.add(c)
+                continue
+            if c in '!':
+                conditionals ^= set(c)
                 continue
             if c.isspace():
                 success = False
