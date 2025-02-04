@@ -168,7 +168,24 @@ def test_tags_parsed_only_in_preamble(terminator):
         "Version: 10\n"
     )
     assert db["name"].value == "python-foo"
+    assert db["NAME"].value == "python-foo"
     assert "version" not in db
+    assert "VERSION" not in db
+
+
+def test_version_override():
+    """RPM itself doesn't override the counterpart"""
+    db = MacroRegistry()
+    specfile_expand(
+        "Name: foo\n"
+        "Version: 1.2\n"
+        "%define name python-foo\n"
+        "%define VERSION nah\n",
+        db)
+    assert db["name"].value == "python-foo"
+    assert db["NAME"].value == "foo"
+    assert db["version"].value == "1.2"
+    assert db["VERSION"].value == "nah"
 
 
 def test_cond_expand():
