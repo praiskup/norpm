@@ -206,6 +206,24 @@ def test_append_via_global():
     assert specfile_expand(
         "%global foo %foo blah\n"
         "%foo\n", db) == "content blah\n"
+    assert db["foo"].value == "content blah"
+
+
+def test_define_vs_global():
+    """
+    %global macros are expanded at the time of definition, %define macros
+    are expanded at the time of calling them.
+    Per docs:
+    https://rpm-software-management.github.io/rpm/manual/macros.html#global-macros
+    """
+    db = MacroRegistry()
+    db["foo"] = "content"
+    assert specfile_expand(
+        "%global aaa %foo blah\n"
+        "%define bbb %foo blah\n"
+        "%foo\n", db) == "content\n"
+    assert db["aaa"].value == "content blah"
+    assert db["bbb"].value == "%foo blah"
 
 
 def test_recursion_limit():
