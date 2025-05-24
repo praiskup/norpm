@@ -82,6 +82,7 @@ def macrofile_split_generator(file_contents, inspec=False):
 
             if c == Special('('):
                 ctx.state = 'PARAMS'
+                ctx.params = ""
                 continue
 
             ctx.macroname += c
@@ -91,7 +92,7 @@ def macrofile_split_generator(file_contents, inspec=False):
             if c == Special(')'):
                 ctx.state = "VALUE_START"
                 continue
-            ctx.params = ctx.params + c if ctx.params else c
+            ctx.params = ctx.params + c
             continue
 
         if ctx.state == "VALUE_START":

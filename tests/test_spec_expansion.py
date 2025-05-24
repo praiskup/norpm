@@ -49,7 +49,7 @@ def test_definition_expansion():
     db = MacroRegistry()
     db["bar"] = "content"
     assert "foo" not in db
-    assert list(specfile_expand_string_generator("%define  foo %bar\n%foo", db)) == ["", "", "content"]
+    assert list(specfile_expand_string_generator("%define  foo %bar\n%foo", db)) == ["", "", "", "", "content"]
     assert db["foo"].value == "%bar"
 
 
@@ -250,6 +250,18 @@ newline
 """, db) == "nextline   lastline\n"
     assert db["blah"].value == "\nnewline"
     assert db["fooo"].value == "nextline   lastline"
+
+
+def test_parametric_consumption():
+    """Test that parametric consume the rest of the line, while non-parametric
+    keep the subsequent part of the line"""
+    db = MacroRegistry()
+    assert specfile_expand("""\
+%define parametric() aaa
+%define normal bbb
+%parametric consumed
+%normal kept
+""", db) == "aaa\nbbb kept\n"
 
 
 def test_conditional_negation():

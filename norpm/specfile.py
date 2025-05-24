@@ -330,10 +330,17 @@ def _isdef_start(string, keywords=None):
 
 def specfile_expand_string_generator(string, macros):
     """Split the string to snippets, and expand parts that are macro calls."""
-    parts = [(0, x) for x in specfile_split_generator(string, macros)]
-    todo = deque(parts)
+    string_generator = specfile_split_generator(string, macros)
+    todo = [(0, string_generator)]
+
     while todo:
-        depth, buffer = todo.popleft()
+        depth, generator = todo[-1]
+        try:
+            buffer = next(generator)
+        except StopIteration:
+            todo.pop()
+            continue
+
         if not buffer.startswith('%'):
             yield buffer
             continue
@@ -352,10 +359,8 @@ def specfile_expand_string_generator(string, macros):
             yield buffer
             continue
 
-        depth += 1
         if depth >= 1000:
             raise RecursionError(f"Macro {buffer} causes recursion loop")
 
-        add = [(depth, x) for x in list(specfile_split_generator(expanded, macros)) if x != ""]
-        add.reverse()
-        todo.extendleft(add)
+        new_generator = specfile_split_generator(expanded, macros)
+        todo.append((depth+1, new_generator))

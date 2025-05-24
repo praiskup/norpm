@@ -90,7 +90,10 @@ def test_inspec_parser():
     assert parts == [("foo", "\nblah\n", None)]
 
     parts = list(macrofile_split_generator("%foo() \nblah\n", inspec=True))
-    assert parts == [("foo", "\nblah\n", None)]
+    assert parts == [("foo", "\nblah\n", "")]
+
+    parts = list(macrofile_split_generator("%foo(p: ) \nblah\n", inspec=True))
+    assert parts == [("foo", "\nblah\n", "p: ")]
 
 def test_forgemeta_parser():
     macro_def = """\
