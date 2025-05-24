@@ -31,6 +31,11 @@ def _is_definition(name):
     return name in special
 
 
+def _isinternal(name):
+    """Return true if Name is an internal name."""
+    return name in {"undefine"}
+
+
 def specfile_split_generator(string, macros):
     """
     Split input string into a macro and non-macro parts.
@@ -107,6 +112,7 @@ def specfile_split_generator(string, macros):
             if c in ['\t', ' ']:
                 macroname = buffer[1:]
                 if _is_special(macroname) or \
+                        _isinternal(macroname) or \
                         macroname in macros and macros[macroname].parametric:
                     state = "MACRO_PARAMETRIC"
                     buffer += c
@@ -197,6 +203,14 @@ def specfile_split_generator(string, macros):
     yield buffer
 
 
+def _expand_internal(internal, params, snippet, macro_registry):
+    if internal == "undefine":
+        tbd = params.split()
+        macro_registry.undefine(tbd[0])
+        return ""
+    return snippet
+
+
 def _expand_snippet(snippet, definitions):
     if snippet in ['%', '%%']:
         return '%'
@@ -239,6 +253,9 @@ def _expand_snippet(snippet, definitions):
     retval = definitions.get_macro_value(name, snippet)
     if not params:
         return retval
+
+    if _isinternal(name):
+        return _expand_internal(name, params, snippet, definitions)
 
     # RPM first expands the parameters, then calls getopt()
     params = specfile_expand_string(params, definitions)

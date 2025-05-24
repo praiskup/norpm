@@ -39,7 +39,7 @@ There are many features yet to be implemented. Contributions are highly encourag
 - [ ] %dnl
 - [ ] %{lua:} (not safe, must be an opt-in)
 - [ ] %(shell) (not safe, must be an opt-in)
-- [ ] %undefine
+- [x] %undefine
 - [ ] %[expressions]
 - [ ] %SOURCEN
 - [ ] Requires/BuildRequires parsing

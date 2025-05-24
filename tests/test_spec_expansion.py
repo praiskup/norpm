@@ -314,3 +314,22 @@ def test_parametric_expansion_count():
 """, db) == """\
 2 parametric1 a x %3
 """
+
+
+def test_undefine():
+    db = MacroRegistry()
+    assert specfile_expand("""\
+%define xyz first
+%define xyz second
+%xyz
+%undefine  xyz
+%xyz
+%undefine xyz
+%xyz
+""", db) == """\
+second
+
+first
+
+%xyz
+"""
