@@ -32,7 +32,7 @@ TODOs
 
 There are many features yet to be implemented. Contributions are highly encouraged!
 
-- [ ] Parametric macro definitions + calls, like `%macro arg1 arg2\eol`
+- [x] Parametric macro definitions + calls
 - [ ] %if/%ifarch, %else statements
 - [ ] rpmrc files (these e.g. define %optflags)
 - [ ] %include

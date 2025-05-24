@@ -2,6 +2,7 @@
 Spec file parser
 """
 
+import getopt
 from collections import deque
 
 from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
@@ -71,7 +72,7 @@ def specfile_split_generator(string, macros):
                 state = "TEXT"
                 continue
 
-            if is_macro_character(c):
+            if is_macro_character(c) or c == '#':
                 buffer += c
                 state = "MACRO"
                 continue
@@ -211,6 +212,9 @@ def _expand_snippet(snippet, definitions):
         return ""
 
     success, name, conditionals, params, alt = parse_macro_call(snippet)
+    if params:
+        params = specfile_expand_string(params, definitions)
+
     if not success:
         return snippet
 
@@ -229,8 +233,33 @@ def _expand_snippet(snippet, definitions):
 
         return definitions[name].value if defined else ""
 
-    return definitions.get_macro_value(name, snippet)
+    if _is_special(name):
+        return snippet
 
+    retval = definitions.get_macro_value(name, snippet)
+    if not params:
+        return retval
+
+    # RPM first expands the parameters, then calls getopt()
+    params = specfile_expand_string(params, definitions)
+    optlist, args = getopt.gnu_getopt(params.split(), definitions[name].params)
+
+    for opt, arg in optlist:
+        definitions.define(opt, opt + (" " + arg if arg else ""), special=True)
+        definitions.define(opt + '*', arg, special=True)
+    for argn, arg in enumerate(args):
+        definitions.define(str(argn+1), arg, special=True)
+    definitions.define("#", str(len(args)), special=True)
+    definitions.define("0", name, special=True)
+    retval = specfile_expand_string(retval, definitions)
+    for opt, _ in optlist:
+        definitions.undefine(opt)
+        definitions.undefine(opt+"*")
+    definitions.undefine("#")
+    for argn, _ in enumerate(args):
+        definitions.undefine(str(argn+1))
+    definitions.undefine("0")
+    return retval
 
 def specfile_expand_strings(snippets, definitions):
     """Given specfile snippets (list of strings, output from

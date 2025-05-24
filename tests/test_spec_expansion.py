@@ -285,3 +285,32 @@ def test_conditional_negation():
     assert specfile_expand_string("%m4", db) == "true"
     assert specfile_expand_string("%m5", db) == "foo"
     assert specfile_expand_string("%m6", db) == ""
+
+
+def test_parametric_expansion_params():
+    db = MacroRegistry()
+    assert specfile_expand("""\
+%define parametric1(b:) %{-b}  %{-b}
+%define parametric2(a:) %{-x}  x%{-x}
+%define parametric3(a:b) %{-a} %{-b} %{-a}
+%define parametric4(a:b) %{-a} %{-b} %{-a}x
+%parametric1 -b b
+%parametric2 a b
+%parametric3 -b -a 10
+%parametric4 xyz
+""", db) == """\
+-b b  -b b
+  x
+-a 10 -b -a 10
+  x
+"""
+
+
+def test_parametric_expansion_count():
+    db = MacroRegistry()
+    assert specfile_expand("""\
+%define parametric1(b:) %# %0 %1 %2 %3
+%parametric1 a -b b x
+""", db) == """\
+2 parametric1 a x %3
+"""

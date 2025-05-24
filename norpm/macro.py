@@ -69,9 +69,13 @@ class MacroRegistry:
         return self.db[name]
 
     def __setitem__(self, name, value):
+        self.define(name, value)
+
+    def define(self, name, value, special=False):
+        """(re)define macro"""
         params = None
 
-        if not is_macro_name(name):
+        if not special and not is_macro_name(name):
             raise KeyError(f"{name} is not a valid macro name")
 
         if isinstance(value, tuple):
@@ -92,6 +96,18 @@ class MacroRegistry:
             output[name] = macrospec.to_dict()
         return output
 
+    def undefine(self, name):
+        """Undefine macro in registry"""
+        if name not in self.db:
+            return
+
+        macro = self.db[name]
+        macro.stack.pop()
+        if macro.stack:
+            return
+
+        del self.db[name]
+
     @property
     def empty(self):
         """Return True if no macro is defined."""
@@ -105,11 +121,16 @@ class MacroRegistry:
             definition = self[name].value
             return definition
         except KeyError:
+            if name.startswith("-"):
+                return ""
             return fallback
+
 
 def is_macro_character(c):
     """Return true if character c can be part of macro name"""
     if c.isalnum():
+        return True
+    if c == '-':
         return True
     if c == '_':
         return True
@@ -120,6 +141,8 @@ def is_macro_name(name):
     """
     Return True if Name is a valid RPM macro name
     """
+    if name == '#':
+        return True
     if not name[0].isalpha() and name[0] != '_':
         return False
     return all(is_macro_character(c) for c in name)
@@ -162,6 +185,9 @@ def parse_macro_call(call):
             if is_macro_character(c):
                 name += c
                 state = 'NAME'
+                continue
+            if c == '#':
+                name += c
                 continue
         if state == 'NAME':
             if is_macro_character(c):
