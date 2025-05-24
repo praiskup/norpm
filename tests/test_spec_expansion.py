@@ -49,21 +49,21 @@ def test_definition_expansion():
     db = MacroRegistry()
     db["bar"] = "content"
     assert "foo" not in db
-    assert list(specfile_expand_string_generator("%define  foo %bar\n%foo", db)) == ["", "", "", "", "content"]
+    assert list(specfile_expand_string_generator("%define  foo %bar\n%foo", db)) == ["content"]
     assert db["foo"].value == "%bar"
 
 
 def test_definition_expansion_trailing_newline():
     db = MacroRegistry()
     db["foo"] = "content"
-    assert list(specfile_expand_string_generator("%{foo}\n", db)) == ["", "content", "\n"]
+    assert list(specfile_expand_string_generator("%{foo}\n", db)) == ["content", "\n"]
 
 
 def test_global_expansion():
     db = MacroRegistry()
     db["bar"] = "content"
     assert "foo" not in db
-    assert list(specfile_expand_string_generator(" %global foo %bar\n%foo", db)) == [" ", "", "", "content"]
+    assert list(specfile_expand_string_generator(" %global foo %bar\n%foo", db)) == [" ", "content"]
     assert db["foo"].value == "content"
 
 
@@ -71,7 +71,7 @@ def test_global_expansion_newline():
     db = MacroRegistry()
     db["bar"] = "content"
     assert "foo" not in db
-    assert list(specfile_expand_string_generator(" %global foo \\\n%bar", db)) == [" ", ""]
+    assert list(specfile_expand_string_generator(" %global foo \\\n%bar", db)) == [" "]
     assert db["foo"].value == "\ncontent"
 
 

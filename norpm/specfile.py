@@ -341,6 +341,9 @@ def specfile_expand_string_generator(string, macros):
             todo.pop()
             continue
 
+        if buffer == "":
+            continue
+
         if not buffer.startswith('%'):
             yield buffer
             continue
@@ -350,7 +353,6 @@ def specfile_expand_string_generator(string, macros):
             for name, body, params in macrofile_split_generator('%' + definition, inspec=True):
                 expanded_body = specfile_expand_string(body, macros)
                 macros[name] = (expanded_body, params)
-                yield ""
 
             continue
 
