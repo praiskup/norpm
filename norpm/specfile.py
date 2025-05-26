@@ -1,5 +1,16 @@
 """
 Spec file parser
+
+Basic method / call orientation.
+
+specfile_expand                 | entrypoint
+    specfile_expand_generator   | line by line analysis of expanded string,
+                                | handles Name, Version, etc.
+        specfile_expand_string_generator  | gets expanded chunks
+            specfile_split_generator      | returns chunks from string
+            specfile_expand_string (recurses to specfile_expand_string_generator)
+            _expand_snippet               | replaces %foo with value
+                specfile_expand_string    | another recursion
 """
 
 from collections import deque
@@ -211,10 +222,14 @@ def _expand_internal(internal, params, snippet, macro_registry):
     return snippet
 
 
-def _expand_snippet(snippet, definitions):
+def _expand_snippet(snippet, definitions, depth=0):
     if snippet in ['%', '%%']:
         return '%'
+
     if not snippet.startswith("%"):
+        return snippet
+
+    if snippet.startswith("%("):
         return snippet
 
     if _is_special(snippet[1:]):
@@ -228,13 +243,6 @@ def _expand_snippet(snippet, definitions):
     success, name, conditionals, params, alt = parse_macro_call(snippet)
     if not success:
         return snippet
-
-    if name in {"lua", "setup", "expand"}:
-        return snippet
-
-    if params:
-        old_params = params
-        params = specfile_expand_string(params, definitions)
 
     if '?' in conditionals:
         # params ignored
@@ -267,14 +275,16 @@ def _expand_snippet(snippet, definitions):
     if not definitions[name].params:
         return retval
 
-    # unexpanded %foo %(shell hack), e.g.
+    # RPM also first expands the parameters before calling getopt()
+    params = specfile_expand_string(params, definitions, depth+1)
+
+    # TODO: unexpanded '%foo %(shell hack)', do this better
     if params.startswith('%'):
         return retval
 
-    # RPM first expands the parameters, then calls getopt()
-    params = specfile_expand_string(params, definitions)
     optlist, args = getopt(params.split(), definitions[name].params)
 
+    # Temporarily define '%1', '%*', '%-f', etc.
     for opt, arg in optlist:
         definitions.define(opt, opt + (" " + arg if arg else ""), special=True)
         definitions.define(opt + '*', arg, special=True)
@@ -282,7 +292,10 @@ def _expand_snippet(snippet, definitions):
         definitions.define(str(argn+1), arg, special=True)
     definitions.define("#", str(len(args)), special=True)
     definitions.define("0", name, special=True)
-    retval = specfile_expand_string(retval, definitions)
+
+    retval = specfile_expand_string(retval, definitions, depth+1)
+
+    # Undefine temporary macros
     for opt, _ in optlist:
         definitions.undefine(opt)
         definitions.undefine(opt+"*")
@@ -300,11 +313,11 @@ def specfile_expand_strings(snippets, definitions):
     return [_expand_snippet(s, definitions) for s in snippets]
 
 
-def specfile_expand_string(string, macros):
+def specfile_expand_string(string, macros, depth=0):
     """Split string to snippets, and expand those that are macro calls.  This
     method returns string again.  Specfile tags are not interpreted.
     """
-    return "".join(list(specfile_expand_string_generator(string, macros)))
+    return "".join(list(specfile_expand_string_generator(string, macros, depth)))
 
 
 def _define_tags_as_macros(line, macros):
@@ -388,10 +401,10 @@ def _isdef_start(string, keywords=None):
     return False
 
 
-def specfile_expand_string_generator(string, macros):
+def specfile_expand_string_generator(string, macros, depth=0):
     """Split the string to snippets, and expand parts that are macro calls."""
     string_generator = specfile_split_generator(string, macros)
-    todo = [(0, string_generator)]
+    todo = [(depth, string_generator)]
 
     while todo:
         depth, generator = todo[-1]
@@ -411,12 +424,11 @@ def specfile_expand_string_generator(string, macros):
         if _isdef_start(buffer, ["global"]):
             _, definition = buffer.split(maxsplit=1)
             for name, body, params in macrofile_split_generator('%' + definition, inspec=True):
-                expanded_body = specfile_expand_string(body, macros)
+                expanded_body = specfile_expand_string(body, macros, depth+1)
                 macros[name] = (expanded_body, params)
-
             continue
 
-        expanded = _expand_snippet(buffer, macros)
+        expanded = _expand_snippet(buffer, macros, depth)
         if expanded == buffer:
             yield buffer
             continue
