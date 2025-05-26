@@ -226,11 +226,15 @@ def _expand_snippet(snippet, definitions):
         return ""
 
     success, name, conditionals, params, alt = parse_macro_call(snippet)
-    if params:
-        params = specfile_expand_string(params, definitions)
-
     if not success:
         return snippet
+
+    if name in {"lua", "setup", "expand"}:
+        return snippet
+
+    if params:
+        old_params = params
+        params = specfile_expand_string(params, definitions)
 
     if '?' in conditionals:
         # params ignored
@@ -250,12 +254,22 @@ def _expand_snippet(snippet, definitions):
     if _is_special(name):
         return snippet
 
-    retval = definitions.get_macro_value(name, snippet)
-    if not params:
-        return retval
-
     if _isinternal(name):
         return _expand_internal(name, params, snippet, definitions)
+
+    retval = definitions.get_macro_value(name, snippet)
+    if retval == snippet:
+        return retval
+    if retval == "":
+        return retval
+    if not params:
+        return retval
+    if not definitions[name].params:
+        return retval
+
+    # unexpanded %foo %(shell hack), e.g.
+    if params.startswith('%'):
+        return retval
 
     # RPM first expands the parameters, then calls getopt()
     params = specfile_expand_string(params, definitions)
