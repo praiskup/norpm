@@ -2,12 +2,12 @@
 Spec file parser
 """
 
-import getopt
 from collections import deque
 
 from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
 from norpm.macro import is_macro_character, parse_macro_call
 from norpm.macrofile import macrofile_parse, macrofile_split_generator
+from norpm.getopt import getopt
 
 # pylint: disable=too-many-statements,too-many-branches
 
@@ -273,7 +273,7 @@ def _expand_snippet(snippet, definitions):
 
     # RPM first expands the parameters, then calls getopt()
     params = specfile_expand_string(params, definitions)
-    optlist, args = getopt.gnu_getopt(params.split(), definitions[name].params)
+    optlist, args = getopt(params.split(), definitions[name].params)
 
     for opt, arg in optlist:
         definitions.define(opt, opt + (" " + arg if arg else ""), special=True)
