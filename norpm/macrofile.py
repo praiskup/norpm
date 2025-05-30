@@ -3,15 +3,13 @@ Parse macro file into a "macroname = unexpanded value" dictionary
 """
 
 import glob
-import logging
 from dataclasses import dataclass
 
 from norpm.macro import MacroRegistry
 from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
+from norpm.logging import get_logger
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
-
+log = get_logger()
 
 @dataclass
 class _CTX():

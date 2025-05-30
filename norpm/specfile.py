@@ -14,13 +14,79 @@ specfile_expand                 | entrypoint
 """
 
 from collections import deque
+from operator import xor
 
 from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
 from norpm.macro import is_macro_character, parse_macro_call
 from norpm.macrofile import macrofile_parse, macrofile_split_generator
 from norpm.getopt import getopt
+from norpm.logging import get_logger
+
+log = get_logger()
 
 # pylint: disable=too-many-statements,too-many-branches
+
+
+class ParseError(Exception):
+    """General parsing error"""
+
+
+class _SpecContext:
+    """
+    If condition is True, we produce the output.
+
+    Attributes
+    ----------
+
+    condition_stack : list of (bool, bool) pairs.
+        First bool represents original %if value.  Second bool denotes that
+        %else flipped the meaning.
+        The library keeps producing output (and processing nested definitions)
+        as long as all the items in stack are True.
+    in_expr : None or string
+        Expression type, e.g., 'if'.  We can't have '%if 1 %if', e.g., this is
+        to note that we are parsing `1 %if` expression.
+    """
+
+    condition_stack = None
+    in_expr = None
+    in_comment = None
+
+    def __init__(self):
+        self.condition_stack = []
+
+    @property
+    def expanding(self):
+        """Return True if we are expanding."""
+        for cond, flipped in self.condition_stack:
+            if not xor(cond, flipped):
+                return False
+        return True
+
+    def condition(self, expanding):
+        """Nest into the stack of conditions."""
+        if self.in_comment:
+            return
+        self.condition_stack.append((expanding, False))
+
+    def close_condition(self):
+        """Emerge from one condition level."""
+        if self.in_comment:
+            return
+        try:
+            self.condition_stack.pop()
+        except IndexError:
+            pass
+
+    def negate_condition(self):
+        """Revert last ondition upon %else."""
+        if self.in_comment:
+            return
+        cond, flipped = self.condition_stack[-1]
+        if flipped:
+            raise ParseError("Double %else")
+        self.condition_stack[-1] = (cond, True)
+
 
 def specfile_split(file_contents, macros):
     """
@@ -32,8 +98,24 @@ def specfile_split(file_contents, macros):
 
 def _is_special(name):
     """Return True if the macro name is a special construct"""
-    special = {"if", "else", "endif", "setup", "package"}
+    special = {"if", "else", "ifarch", "ifnarch", "endif", "setup", "package"}
     return name in special
+
+
+def _is_condition(buffer):
+    """Return True if the macro name condition"""
+    special = {"if", "else", "ifarch", "endif"}
+    for s in special:
+        if not buffer.startswith("%" + s):
+            continue
+        if len(buffer) == len(s) + 1:
+            return True
+        first_after = buffer[len(s)+1]
+        if first_after == "%":
+            return True
+        if first_after.isspace():
+            return True
+    return False
 
 
 def _is_definition(name):
@@ -51,13 +133,36 @@ def specfile_split_generator(string, macros):
     """
     Split input string into a macro and non-macro parts.
     """
+    context = _SpecContext()
+    return _specfile_split_generator(context, string, macros)
+
+
+def _specfile_split_generator(context, string, macros):
+
     state = "TEXT"
     depth = 0
     conditional_prefix = False
     brackets = None
+    reset_comment = True
+    starts_whitespace = True
 
     buffer = ""
     for c in tokenize(string):
+        if reset_comment:
+            starts_whitespace = True
+            reset_comment = False
+            context.in_comment = False
+
+        if c == '#' and starts_whitespace:
+            context.in_comment = True
+
+        if not c.isspace():
+            starts_whitespace = False
+
+        if c == '\n' or c == Special("\n"):
+            reset_comment = True
+
+
         if state == "TEXT":
             if c != "%":
                 buffer += c
@@ -115,6 +220,12 @@ def specfile_split_generator(string, macros):
                 continue
 
             if c == "%":
+                if buffer == "%if":
+                    # %if%macro_that_starts_with_space
+                    state = "MACRO_PARAMETRIC"
+                    buffer += c
+                    continue
+
                 yield buffer
                 buffer = "%"
                 state = "MACRO_START"
@@ -139,6 +250,11 @@ def specfile_split_generator(string, macros):
             state = "TEXT"
             if c == Special("\n"):
                 buffer = "\\\n"
+            elif c == "\n":
+                if not context.in_comment and _is_condition(buffer):
+                    buffer = ""
+                else:
+                    buffer = "\n"
             else:
                 buffer = str(c)
             continue
@@ -175,7 +291,7 @@ def specfile_split_generator(string, macros):
                 continue
             if c == "\n":
                 yield buffer
-                buffer = "\n"
+                buffer = "" if _is_condition(buffer) else "\n"
                 state = "TEXT"
                 continue
 
@@ -222,7 +338,45 @@ def _expand_internal(internal, params, snippet, macro_registry):
     return snippet
 
 
-def _expand_snippet(snippet, definitions, depth=0):
+def _parse_condition(snippet):
+    """The snippet starts with % character.  We want to decide if this is a
+    condition (or return None), and then split into left and right hand side."""
+
+    terminator = 0
+    keyword = ""
+    for keyword in ["%ifnarch", "%ifarch", "%if"]:
+        if snippet.startswith(keyword):
+            terminator = len(keyword)
+            break
+
+    if snippet == keyword:
+        raise ParseError(f"{keyword} without expression")
+
+    if terminator == 0:
+        return None
+
+    if snippet[terminator] in ["\r", "\n"]:
+        raise ParseError(f"{snippet[:terminator]} without expression")
+
+    if snippet[terminator].isspace():
+        items = snippet.split(maxsplit=1)
+        if len(items) <= 1:
+            raise ParseError("%if without expression")
+        return (keyword, snippet[terminator:])
+
+    if snippet[terminator] == "%":
+        return (keyword, snippet[terminator:])
+
+    return None
+
+
+def _eval_expression(snippet):
+    if "1" in snippet:
+        return True
+    return False
+
+
+def _expand_snippet(context, snippet, definitions, depth=0):
     if snippet in ['%', '%%']:
         return '%'
 
@@ -232,10 +386,34 @@ def _expand_snippet(snippet, definitions, depth=0):
     if snippet.startswith("%("):
         return snippet
 
+    if cond := _parse_condition(snippet):
+        if context.in_expr:
+            raise ParseError("%if %if")
+        _, expr = cond
+        # expand the expression content first
+        log.debug("Expression: %s", expr)
+        context.in_expr = True
+        expr = _specfile_expand_string(context, expr, definitions, depth+1)
+        context.in_expr= False
+        context.condition(_eval_expression(expr))
+        return None
+
+    if snippet == "%else":
+        context.negate_condition()
+        if context.in_comment:
+            return snippet
+        return None
+
+    if snippet == "%endif":
+        context.close_condition()
+        return None
+
     if _is_special(snippet[1:]):
         return snippet
 
     if _isdef_start(snippet):
+        if not context.expanding:
+            return ""
         _, params = snippet[1:].split(maxsplit=1)
         macrofile_parse("%" + params, definitions, inspec=True)
         return ""
@@ -276,7 +454,7 @@ def _expand_snippet(snippet, definitions, depth=0):
         return retval
 
     # RPM also first expands the parameters before calling getopt()
-    params = specfile_expand_string(params, definitions, depth+1)
+    params = _specfile_expand_string(context, params, definitions, depth+1)
 
     # TODO: unexpanded '%foo %(shell hack)', do this better
     if params.startswith('%'):
@@ -293,7 +471,7 @@ def _expand_snippet(snippet, definitions, depth=0):
     definitions.define("#", str(len(args)), special=True)
     definitions.define("0", name, special=True)
 
-    retval = specfile_expand_string(retval, definitions, depth+1)
+    retval = _specfile_expand_string(context, retval, definitions, depth+1)
 
     # Undefine temporary macros
     for opt, _ in optlist:
@@ -305,19 +483,30 @@ def _expand_snippet(snippet, definitions, depth=0):
     definitions.undefine("0")
     return retval
 
+
 def specfile_expand_strings(snippets, definitions):
     """Given specfile snippets (list of strings, output from
     specfile_split_generator typically), expand the snippets that seem to be
     macro calls.
     """
-    return [_expand_snippet(s, definitions) for s in snippets]
+    context = _SpecContext()
+    return  _specfile_expand_strings(context, snippets, definitions)
+
+
+def _specfile_expand_strings(context, snippets, definitions):
+    return [_expand_snippet(context, s, definitions) for s in snippets]
 
 
 def specfile_expand_string(string, macros, depth=0):
     """Split string to snippets, and expand those that are macro calls.  This
     method returns string again.  Specfile tags are not interpreted.
     """
-    return "".join(list(specfile_expand_string_generator(string, macros, depth)))
+    context = _SpecContext()
+    return _specfile_expand_string(context, string, macros, depth)
+
+
+def _specfile_expand_string(context, string, macros, depth):
+    return "".join(list(_specfile_expand_string_generator(context, string, macros, depth)))
 
 
 def _define_tags_as_macros(line, macros):
@@ -341,7 +530,12 @@ def specfile_expand(content, macros):
     """Expand specfile content (string), return string.  Tags (like Name:) are
     interpreted.  See specfile_expand_generator().
     """
-    return "".join(specfile_expand_generator(content, macros))
+    context = _SpecContext()
+    return _specfile_expand(context, content, macros)
+
+
+def _specfile_expand(context, content, macros):
+    return "".join(_specfile_expand_generator(context, content, macros))
 
 
 def line_ends_preamble(line):
@@ -365,9 +559,14 @@ def specfile_expand_generator(content, macros):
     line-by-line, and if tags like Name/Version/Epoch/etc. are observed,
     corresponding (%name, %version, %release, ...) macros are defined.
     """
+    context = _SpecContext()
+    return _specfile_expand_generator(context, content, macros)
+
+
+def _specfile_expand_generator(context, content, macros):
     buffer = ""
     done = False
-    for string in specfile_expand_string_generator(content, macros):
+    for string in _specfile_expand_string_generator(context, content, macros):
         if done:
             yield string
             continue
@@ -403,7 +602,12 @@ def _isdef_start(string, keywords=None):
 
 def specfile_expand_string_generator(string, macros, depth=0):
     """Split the string to snippets, and expand parts that are macro calls."""
-    string_generator = specfile_split_generator(string, macros)
+    context = _SpecContext()
+    return _specfile_expand_string_generator(context, string, macros, depth)
+
+
+def _specfile_expand_string_generator(context, string, macros, depth=0):
+    string_generator = _specfile_split_generator(context, string, macros)
     todo = [(depth, string_generator)]
 
     while todo:
@@ -418,23 +622,31 @@ def specfile_expand_string_generator(string, macros, depth=0):
             continue
 
         if not buffer.startswith('%'):
-            yield buffer
+            if context.expanding:
+                yield buffer
             continue
 
         if _isdef_start(buffer, ["global"]):
+            if not context.expanding:
+                continue
+
             _, definition = buffer.split(maxsplit=1)
             for name, body, params in macrofile_split_generator('%' + definition, inspec=True):
-                expanded_body = specfile_expand_string(body, macros, depth+1)
+                expanded_body = _specfile_expand_string(context, body, macros, depth+1)
                 macros[name] = (expanded_body, params)
             continue
 
-        expanded = _expand_snippet(buffer, macros, depth)
+        expanded = _expand_snippet(context, buffer, macros, depth)
+        if expanded is None or expanded == "":
+            continue
+
         if expanded == buffer:
-            yield buffer
+            if context.expanding:
+                yield buffer
             continue
 
         if depth >= 1000:
             raise RecursionError(f"Macro {buffer} causes recursion loop")
 
-        new_generator = specfile_split_generator(expanded, macros)
+        new_generator = _specfile_split_generator(context, expanded, macros)
         todo.append((depth+1, new_generator))

@@ -33,7 +33,7 @@ TODOs
 There are many features yet to be implemented. Contributions are highly encouraged!
 
 - [x] Parametric macro definitions + calls
-- [ ] %if/%ifarch, %else statements
+- [@] %if/%ifarch, %else statements, in progress
 - [ ] rpmrc files (these e.g. define %optflags)
 - [ ] %include
 - [ ] %dnl
