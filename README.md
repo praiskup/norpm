@@ -32,15 +32,17 @@ TODOs
 
 There are many features yet to be implemented. Contributions are highly encouraged!
 
+- [x] %undefine
 - [x] Parametric macro definitions + calls
-- [@] %if/%ifarch, %else statements, in progress
+- [x] %if, %else parsing (generic)
+- [ ] expression parsing (e.g., for %if)
+- [ ] %if[n]arch
 - [ ] rpmrc files (these e.g. define %optflags)
 - [ ] %include
 - [ ] %dnl
-- [ ] %{lua:} (not safe, must be an opt-in)
-- [ ] %(shell) (not safe, must be an opt-in)
-- [x] %undefine
 - [ ] %[expressions]
 - [ ] %SOURCEN
 - [ ] Requires/BuildRequires parsing
 - [ ] built-ins, like %{sub:}, %{expand:}, etc.
+- [ ] %{lua:} (not safe, must be an opt-in)
+- [ ] %(shell) (not safe, must be an opt-in)
