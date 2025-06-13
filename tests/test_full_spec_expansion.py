@@ -21,6 +21,7 @@ def _write_file(filename, string):
 
 def _test_file(filename):
     db = MacroRegistry()
+    db.define("fedora", "43")
     expanded = specfile_expand(_read_file(filename), db)
     _write_file(filename + ".out", expanded)
     if expanded != _read_file(filename + ".exp"):

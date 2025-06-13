@@ -22,6 +22,7 @@ from norpm.macro import is_macro_character, parse_macro_call
 from norpm.macrofile import macrofile_parse, macrofile_split_generator
 from norpm.getopt import getopt
 from norpm.logging import get_logger
+from norpm.expression import eval_rpm_expr
 
 log = get_logger()
 
@@ -399,7 +400,9 @@ def _parse_condition(full_snippet):
 
 
 def _eval_expression(snippet):
-    if "1" in snippet:
+    if '%' in snippet:
+        return False
+    if eval_rpm_expr(snippet):
         return True
     return False
 
@@ -420,13 +423,23 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     if cond := _parse_condition(full_snippet):
         if context.in_expr:
             raise ParseError("%if %if")
-        _, expr = cond
+
+        iftype, expr = cond
         # expand the expression content first
         log.debug("Expression: %s", expr)
-        context.in_expr = True
-        expr = _specfile_expand_string(context, expr, definitions, depth+1)
-        context.in_expr= False
-        context.condition(_eval_expression(expr))
+
+        if context.expanding:
+            context.in_expr = True
+            expr = _specfile_expand_string(context, expr, definitions, depth+1)
+            context.in_expr = False
+            if iftype == "%if":
+                expr = _eval_expression(expr)
+            else:
+                expr = True  # todo arch
+        else:
+            expr = False
+
+        context.condition(expr)
         return None
 
     cond_attempt = snippet.split()
@@ -467,7 +480,12 @@ def _expand_snippet(context, snippet, definitions, depth=0):
         if defined and alt:
             return alt
 
-        return definitions[name].value if defined else ""
+        # TODO: add support for bcond
+        with_hack = ""
+        if name.startswith("with_") or name.startswith("without_"):
+            with_hack = snippet
+
+        return definitions[name].value if defined else with_hack
 
     if _is_special(name):
         return snippet
