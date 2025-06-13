@@ -26,6 +26,12 @@
 # so limit the number of threads
 
 
+
+
+# ensure that it's > 0
+
+# also reduce debuginfo level
+
 Name:           nest
 Version:        3.8
 Release:        %autorelease
@@ -245,7 +251,7 @@ pushd build$MPI_COMPILE_TYPE  &&
     cmake         -DCMAKE_C_FLAGS_RELEASE:STRING="-DNDEBUG"         -DCMAKE_CXX_FLAGS_RELEASE:STRING="-DNDEBUG"         -DCMAKE_Fortran_FLAGS_RELEASE:STRING="-DNDEBUG"         -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON         -DCMAKE_INSTALL_INCLUDEDIR:PATH=$MPI_INCLUDE         -DCMAKE_INSTALL_LIBDIR:PATH=$MPI_LIB         -DSYSCONF_INSTALL_DIR:PATH=%{_sysconfdir}         -DSHARE_INSTALL_PREFIX:PATH=%{_prefix}         -Dwith-optimize:BOOL=OFF         -DCMAKE_SKIP_RPATH:BOOL=ON         -DCMAKE_SKIP_BUILD_RPATH:BOOL=ON         -DCMAKE_SKIP_INSTALL_RPATH:BOOL=ON         -DCMAKE_BUILD_WITH_INSTALL_RPATH:BOOL=OFF         -Dwith-mpi:BOOL=$MPI_YES         -Dwith-gsl:BOOL=ON         -Dwith-boost:BOOL=ON         -Dwith-libneurosim:PATH=$MPI_HOME         -Dwith-python:BOOL=ON          -DPYEXECDIR:PATH=$MPI_SITEARCH         -DCMAKE_INSTALL_PREFIX:PATH=$MPI_HOME         -DBUILD_SHARED_LIBS:BOOL=ON         -DPY_MPI4PY:PATH=$PY_MPI4PY         -DHAVE_RANDOM_123:BOOL=ON         -Dwith-music:BOOL=OFF         -DLIB_SUFFIX="" .. && 
 popd || exit -1;
 
-    %make_build -j -C build$MPI_COMPILE_TYPE || exit -1
+    %make_build -j%(awk '/MemTotal:/ {print int($2/25e6)}' /proc/meminfo) -C build$MPI_COMPILE_TYPE || exit -1
 
 pushd build$MPI_COMPILE_TYPE  && 
     pushd pynest && 

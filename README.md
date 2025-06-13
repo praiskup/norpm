@@ -4,7 +4,8 @@ RPM Macro Expansion in Python
 Parse RPM macro files and spec files, and expand macros safely—without the
 potential Turing Complete side effects.
 
-This is a standalone library that depends only on the standard Python library.
+This is a standalone library that depends only on the standard Python library
+and [PLY](https://github.com/dabeaz/ply) (for expression parsing).
 
 How to Use It
 -------------
@@ -35,7 +36,10 @@ There are many features yet to be implemented. Contributions are highly encourag
 - [x] %undefine
 - [x] Parametric macro definitions + calls
 - [x] %if, %else parsing (generic)
-- [ ] expression parsing (e.g., for %if)
+- [x] expression parsing (e.g., for %if)
+- [ ] version comparisons, like v"1" < v"1.2"
+- [ ] [functions in expressions](https://github.com/rpm-software-management/rpm/blob/8ae5f1d0db9e3c088d3163cbfc2612990702ff93/rpmio/expression.cc#L556)
+- [ ] %bcond* support
 - [ ] %if[n]arch
 - [ ] rpmrc files (these e.g. define %optflags)
 - [ ] %include

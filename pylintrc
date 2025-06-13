@@ -73,31 +73,31 @@ bad-names=foo,bar,baz,toto,tutu,tata
 [DESIGN]
 
 # Maximum number of arguments for function / method
-max-args=10
+max-args=1000
 
 # Maximum number of locals for function / method body
-max-locals=20
+max-locals=1000
 
 # Maximum number of return / yield for function / method body
-max-returns=6
+max-returns=1000
 
 # Maximum number of branch for function / method body
-max-branches=20
+max-branches=1000
 
 # Maximum number of statements in function / method body
-max-statements=50
+max-statements=1000
 
 # Maximum number of parents for a class (see R0901).
-max-parents=7
+max-parents=1000
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=7
+max-attributes=1000
 
 # Minimum number of public methods for a class (see R0903).
-min-public-methods=1
+min-public-methods=0
 
 # Maximum number of public methods for a class (see R0904).
-max-public-methods=20
+max-public-methods=1000
 
 
 [FORMAT]

@@ -368,3 +368,8 @@ newline
 """
 
     assert db.db["foo"].value == "\nif postifelse"
+
+
+def test_not_nested_expr():
+    macros = MacroRegistry()
+    assert specfile_expand_string("0%{?rhel} >= 6", macros) == "0 >= 6"
