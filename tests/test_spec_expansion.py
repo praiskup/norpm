@@ -333,3 +333,32 @@ first
 
 %xyz
 """
+
+def test_if_with_newline():
+    db = MacroRegistry()
+    spec = b'foo\n%if 1\nif \\\n%else \nELSE \\\n%endif \npostifelse\n'.decode()
+    assert specfile_expand_string(spec, db) == '''\
+foo
+if \\
+postifelse
+'''
+
+
+
+def test_if_in_global():
+    db = MacroRegistry()
+    spec = '''\
+%global foo \\
+%if 1 \\
+if \\\\\\
+%else \\
+ELSE \\\\\\
+%endif \\
+postifelse
+newline
+'''
+    assert specfile_expand(spec, db) == """\
+newline
+"""
+
+    assert db.db["foo"].value == "\nif postifelse"

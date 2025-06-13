@@ -164,6 +164,9 @@ def _specfile_split_generator(context, string, macros):
 
 
         if state == "TEXT":
+            if c == Special("\n"):
+                buffer += "\\\n"
+                continue
             if c != "%":
                 buffer += c
                 continue
@@ -398,13 +401,14 @@ def _expand_snippet(context, snippet, definitions, depth=0):
         context.condition(_eval_expression(expr))
         return None
 
-    if snippet == "%else":
+    cond_attempt = snippet.split()
+    if cond_attempt[0] == "%else":
         context.negate_condition()
         if context.in_comment:
             return snippet
         return None
 
-    if snippet == "%endif":
+    if cond_attempt[0] == "%endif":
         context.close_condition()
         return None
 
@@ -631,9 +635,9 @@ def _specfile_expand_string_generator(context, string, macros, depth=0):
                 continue
 
             _, definition = buffer.split(maxsplit=1)
-            for name, body, params in macrofile_split_generator('%' + definition, inspec=True):
-                expanded_body = _specfile_expand_string(context, body, macros, depth+1)
-                macros[name] = (expanded_body, params)
+            expanded_def = specfile_expand_string(definition, macros, depth+1)
+            for name, body, params in macrofile_split_generator('%' + expanded_def, inspec=True):
+                macros[name] = (body, params)
             continue
 
         expanded = _expand_snippet(context, buffer, macros, depth)
