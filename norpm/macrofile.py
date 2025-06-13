@@ -149,6 +149,9 @@ def macrofile_split_generator(file_contents, inspec=False):
     if ctx.state == "VALUE":
         yield ctx.macroname, ctx.value, ctx.params
 
+    if ctx.state == "VALUE_START" and inspec:
+        yield ctx.macroname, ctx.value, ctx.params
+
 
 def _get_macro_files():
     patterns = [
