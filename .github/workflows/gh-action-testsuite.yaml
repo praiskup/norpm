@@ -1,0 +1,24 @@
+---
+name: Unit-tests on Ubuntu
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  run-python-script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+
+      - name: Install test dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: ./run_tests.sh
