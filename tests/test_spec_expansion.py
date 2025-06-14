@@ -8,24 +8,30 @@ from norpm.specfile import (
     specfile_split_generator,
     specfile_expand_string,
     specfile_expand_string_generator,
-    specfile_expand_strings,
     specfile_expand,
     specfile_expand_generator,
 )
 from norpm.macro import MacroRegistry
 
 
+def _assert_expand_strings(inputs, outputs):
+    for text, exp_output in zip(inputs, outputs):
+        assert specfile_expand_string(text, {}) == exp_output
+
+
 def test_basic_token_expansion():
-    assert specfile_expand_strings(["%%", "%", " a"], {}) == ["%", "%", " a"]
+    assert specfile_expand_string("%%", {}) == "%"
+    assert specfile_expand_string("%", {}) == "%"
+    assert specfile_expand_string("a", {}) == "a"
 
 
 def test_basic_macro_expansion():
     db = MacroRegistry()
-    assert specfile_expand_strings(["%foo"], db) == ["%foo"]
-    assert specfile_expand_strings(["%{foo}"], db) == ["%{foo}"]
+    assert specfile_expand_string("%foo", db) == "%foo"
+    assert specfile_expand_string("%{foo}", db) == "%{foo}"
     db["foo"] = "baz"
-    assert specfile_expand_strings(["%foo"], db) == ["baz"]
-    assert specfile_expand_strings(["%{foo}"], db) == ["baz"]
+    assert specfile_expand_string("%foo", db) == "baz"
+    assert specfile_expand_string("%{foo}", db) == "baz"
 
 def test_specfile_split_generator():
     assert list(specfile_split_generator("content", {})) == ["content"]

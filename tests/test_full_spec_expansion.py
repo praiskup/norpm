@@ -32,3 +32,10 @@ def test_specfile_nest():
     Nest has a nice global definition.
     """
     _test_file("nest.spec")
+
+
+def test_specfile_clustershell():
+    """
+    Clustershell has %else in changelog.
+    """
+    _test_file("clustershell.spec")

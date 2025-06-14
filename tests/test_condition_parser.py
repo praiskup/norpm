@@ -57,7 +57,22 @@ def test_else_commented():
 """, MacroRegistry()) == "#%else\n"
 
 
+def test_else_commented2():
+    """While macros are normally expanded in comments, if-else statements
+    #-commented out have no effect"""
+    assert specfile_expand("""\
+begin #%else
+""", MacroRegistry()) == "begin #%else\n"
+
+
 def test_endif_no_if():
     assert specfile_expand("""\
 %endif
 """, MacroRegistry()) == ""
+
+
+def test_if_not_white():
+    """The %if statement has no effect if not starting the line."""
+    assert specfile_expand("""\
+ne-e %if 0
+""", MacroRegistry()) == "ne-e %if 0\n"
