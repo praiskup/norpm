@@ -40,3 +40,8 @@ def test_specfile_clustershell():
     Clustershell has %else in changelog.
     """
     _test_file("clustershell.spec")
+
+
+def test_specfile_2024_cli():
+    """Else statements with suffix comments"""
+    _test_file("2048-cli.spec")

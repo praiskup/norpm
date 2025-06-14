@@ -170,7 +170,7 @@ def _specfile_split_generator(context, string, macros):
             context.in_comment = False
             macro_starts_line = False
 
-        if c == '#':
+        if c == '#' and state != "MACRO_PARAMETRIC":
             context.in_comment = True
 
         if not c.isspace():
@@ -445,7 +445,7 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     cond_attempt = snippet.split()
     if cond_attempt[0] == "%else":
         context.negate_condition()
-        if context.in_comment:
+        if full_snippet.in_comment:
             return snippet
         return None
 
