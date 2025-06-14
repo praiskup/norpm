@@ -3,6 +3,7 @@ name: Lint Python issues
 
 on:
   push:
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -23,6 +24,10 @@ jobs:
       - id: VCS_Diff_Lint
         name: VCS Diff Lint
         uses: fedora-copr/vcs-diff-lint-action@v1
+        with:
+          linter_tags: |
+            pylint
+            ruff
 
       - name: Upload artifact with detected defects in SARIF format
         uses: actions/upload-artifact@v4
