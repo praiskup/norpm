@@ -15,6 +15,7 @@ specfile_expand                 | entrypoint
 
 from collections import deque
 from operator import xor
+from dataclasses import dataclass
 
 from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
 from norpm.macro import is_macro_character, parse_macro_call
@@ -134,7 +135,17 @@ def specfile_split_generator(string, macros):
     Split input string into a macro and non-macro parts.
     """
     context = _SpecContext()
-    return _specfile_split_generator(context, string, macros)
+    for s in _specfile_split_generator(context, string, macros):
+        yield str(s)
+
+
+@dataclass
+class _Snippet:
+    text: str
+    in_comment: bool = False
+    macro_starts_line: bool = True
+    def __str__(self):
+        return self.text
 
 
 def _specfile_split_generator(context, string, macros):
@@ -144,24 +155,31 @@ def _specfile_split_generator(context, string, macros):
     conditional_prefix = False
     brackets = None
     reset_comment = True
-    starts_whitespace = True
+    whitespaces_starting = True
+    macro_starts_line = False
+
+    def _snippet():
+        return _Snippet(buffer, in_comment=context.in_comment,
+                        macro_starts_line=macro_starts_line)
 
     buffer = ""
     for c in tokenize(string):
         if reset_comment:
-            starts_whitespace = True
             reset_comment = False
             context.in_comment = False
+            macro_starts_line = False
 
-        if c == '#' and starts_whitespace:
+        if c == '#':
             context.in_comment = True
 
         if not c.isspace():
-            starts_whitespace = False
+            if whitespaces_starting and c == '%':
+                macro_starts_line = True
+            whitespaces_starting = False
 
         if c == '\n' or c == Special("\n"):
             reset_comment = True
-
+            whitespaces_starting = True
 
         if state == "TEXT":
             if c == Special("\n"):
@@ -171,7 +189,7 @@ def _specfile_split_generator(context, string, macros):
                 buffer += c
                 continue
 
-            yield buffer
+            yield _snippet()
             buffer = c
             state = "MACRO_START"
             continue
@@ -184,14 +202,14 @@ def _specfile_split_generator(context, string, macros):
                 continue
 
             if c.isspace():
-                yield buffer
+                yield _snippet()
                 state = "TEXT"
                 buffer = c
                 continue
 
             if c == "%":
                 buffer += "%"
-                yield buffer
+                yield _snippet()
                 buffer = ""
                 state = "TEXT"
                 continue
@@ -207,7 +225,7 @@ def _specfile_split_generator(context, string, macros):
                 state = "MACRO"
                 continue
 
-            yield buffer
+            yield _snippet()
             state = "TEXT"
             buffer = c
             continue
@@ -229,7 +247,7 @@ def _specfile_split_generator(context, string, macros):
                     buffer += c
                     continue
 
-                yield buffer
+                yield _snippet()
                 buffer = "%"
                 state = "MACRO_START"
                 continue
@@ -248,7 +266,7 @@ def _specfile_split_generator(context, string, macros):
                     buffer += c
                     continue
 
-            yield buffer
+            yield _snippet()
 
             state = "TEXT"
             if c == Special("\n"):
@@ -278,7 +296,7 @@ def _specfile_split_generator(context, string, macros):
 
             if c == brackets[1]:
                 buffer += c
-                yield buffer
+                yield _snippet()
                 buffer = ""
                 state = "TEXT"
                 continue
@@ -288,13 +306,16 @@ def _specfile_split_generator(context, string, macros):
 
         if state == "MACRO_PARAMETRIC":
             if c == Special('\n'):
-                yield buffer
+                yield _snippet()
                 buffer = ""
                 state = "TEXT"
                 continue
             if c == "\n":
-                yield buffer
-                buffer = "" if _is_condition(buffer) else "\n"
+                yield _snippet()
+                if _is_condition(buffer) and macro_starts_line:
+                    buffer = ""
+                else:
+                    buffer = "\n"
                 state = "TEXT"
                 continue
 
@@ -320,7 +341,7 @@ def _specfile_split_generator(context, string, macros):
                 continue
 
             if c == "\n":
-                yield buffer
+                yield _snippet()
                 # We intentionally eat the newline, and not add this
                 # to the buffer. That's what RPM does.
                 buffer = ""
@@ -330,7 +351,7 @@ def _specfile_split_generator(context, string, macros):
             buffer += c
             continue
 
-    yield buffer
+    yield _snippet()
 
 
 def _expand_internal(internal, params, snippet, macro_registry):
@@ -341,10 +362,11 @@ def _expand_internal(internal, params, snippet, macro_registry):
     return snippet
 
 
-def _parse_condition(snippet):
+def _parse_condition(full_snippet):
     """The snippet starts with % character.  We want to decide if this is a
     condition (or return None), and then split into left and right hand side."""
 
+    snippet = full_snippet.text
     terminator = 0
     keyword = ""
     for keyword in ["%ifnarch", "%ifarch", "%if"]:
@@ -360,6 +382,9 @@ def _parse_condition(snippet):
 
     if snippet[terminator] in ["\r", "\n"]:
         raise ParseError(f"{snippet[:terminator]} without expression")
+
+    if not full_snippet.macro_starts_line:
+        return None
 
     if snippet[terminator].isspace():
         items = snippet.split(maxsplit=1)
@@ -380,6 +405,9 @@ def _eval_expression(snippet):
 
 
 def _expand_snippet(context, snippet, definitions, depth=0):
+    full_snippet = snippet
+    snippet = full_snippet.text
+
     if snippet in ['%', '%%']:
         return '%'
 
@@ -389,7 +417,7 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     if snippet.startswith("%("):
         return snippet
 
-    if cond := _parse_condition(snippet):
+    if cond := _parse_condition(full_snippet):
         if context.in_expr:
             raise ParseError("%if %if")
         _, expr = cond
@@ -486,19 +514,6 @@ def _expand_snippet(context, snippet, definitions, depth=0):
         definitions.undefine(str(argn+1))
     definitions.undefine("0")
     return retval
-
-
-def specfile_expand_strings(snippets, definitions):
-    """Given specfile snippets (list of strings, output from
-    specfile_split_generator typically), expand the snippets that seem to be
-    macro calls.
-    """
-    context = _SpecContext()
-    return  _specfile_expand_strings(context, snippets, definitions)
-
-
-def _specfile_expand_strings(context, snippets, definitions):
-    return [_expand_snippet(context, s, definitions) for s in snippets]
 
 
 def specfile_expand_string(string, macros, depth=0):
@@ -617,7 +632,8 @@ def _specfile_expand_string_generator(context, string, macros, depth=0):
     while todo:
         depth, generator = todo[-1]
         try:
-            buffer = next(generator)
+            snippet = next(generator)
+            buffer = str(snippet)
         except StopIteration:
             todo.pop()
             continue
@@ -640,7 +656,7 @@ def _specfile_expand_string_generator(context, string, macros, depth=0):
                 macros[name] = (body, params)
             continue
 
-        expanded = _expand_snippet(context, buffer, macros, depth)
+        expanded = _expand_snippet(context, snippet, macros, depth)
         if expanded is None or expanded == "":
             continue
 
