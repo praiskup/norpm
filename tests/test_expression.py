@@ -67,3 +67,17 @@ Not yet working.
 %bcond_without system_ntirpc
 Not yet working.
 """
+
+
+def test_else_and_comment():
+    """ Normal expression expansion """
+    assert specfile_expand("""\
+%if 0
+%else  # foo
+1
+%endif  # bar
+post
+""", MacroRegistry()) == """\
+1
+post
+"""
