@@ -16,6 +16,7 @@ specfile_expand                 | entrypoint
 from collections import deque
 from operator import xor
 from dataclasses import dataclass
+import re
 
 from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
 from norpm.macro import is_macro_character, parse_macro_call
@@ -27,6 +28,13 @@ from norpm.expression import eval_rpm_expr
 log = get_logger()
 
 # pylint: disable=too-many-statements,too-many-branches
+
+
+SHELL_REGEXP_HACKS = [{
+    # many packages use '%(c=%{commit0}; echo ${c:0:7})'
+    'regexp': re.compile(r'%\([a-zA-Z0-9]+=%{?([a-zA-Z0-9]+)}?\s*;\secho\s*\${[a-zA-Z0-9]+:0:([0-9]+)}'),
+    'method': lambda x: f'%{{sub %{{{x[1]}}} 1 {x[2]}}}',
+}]
 
 
 class ParseError(Exception):
@@ -418,6 +426,9 @@ def _expand_snippet(context, snippet, definitions, depth=0):
         return snippet
 
     if snippet.startswith("%("):
+        for hack in SHELL_REGEXP_HACKS:
+            if m := hack["regexp"].match(snippet):
+                return hack["method"](m)
         return snippet
 
     if cond := _parse_condition(full_snippet):
