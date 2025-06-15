@@ -37,6 +37,43 @@ SHELL_REGEXP_HACKS = [{
 }]
 
 
+class _Builtin:
+    @classmethod
+    def eval(cls, snippet, params, db):
+        """evaluate the builtin, return the expanded value"""
+        raise NotImplementedError
+
+
+class _BuiltinUndefine(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, db):
+        db.undefine(params[0])
+        return ""
+
+
+class _BuiltinSub(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, db):
+        # params: string start stop (indexes)
+        try:
+            string, start, stop = params
+            start = int(start)
+            stop = int(stop)
+        except ValueError:
+            return snippet
+        # start index to python start index
+        if start >= 1:
+            start -= 1
+        if stop < 0:
+            stop += 1
+        return string[start:stop]
+
+
+BUILTINS = {
+    "sub": _BuiltinSub,
+    "undefine": _BuiltinUndefine,
+}
+
 class ParseError(Exception):
     """General parsing error"""
 
@@ -134,9 +171,9 @@ def _is_definition(name):
     return name in special
 
 
-def _isinternal(name):
+def _is_builtin(name):
     """Return true if Name is an internal name."""
-    return name in {"undefine"}
+    return name in BUILTINS
 
 
 def specfile_split_generator(string, macros):
@@ -264,7 +301,7 @@ def _specfile_split_generator(context, string, macros):
             if c in ['\t', ' ']:
                 macroname = buffer[1:]
                 if _is_special(macroname) or \
-                        _isinternal(macroname) or \
+                        _is_builtin(macroname) or \
                         macroname in macros and macros[macroname].parametric:
                     state = "MACRO_PARAMETRIC"
                     buffer += c
@@ -363,12 +400,16 @@ def _specfile_split_generator(context, string, macros):
     yield _snippet()
 
 
-def _expand_internal(internal, params, snippet, macro_registry):
-    if internal == "undefine":
-        tbd = params.split()
-        macro_registry.undefine(tbd[0])
+def _expand_internal(context, depth, internal, params, snippet, db):
+    """Return None if not internal, otherwise return expanded snippet."""
+    try:
+        builtin = BUILTINS[internal]
+    except KeyError:
+        return None
+    if not context.expanding:
         return ""
-    return snippet
+    params = _specfile_expand_string(context, params, db, depth+1)
+    return builtin.eval(snippet, params.split(), db)
 
 
 def _parse_condition(full_snippet):
@@ -501,8 +542,9 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     if _is_special(name):
         return snippet
 
-    if _isinternal(name):
-        return _expand_internal(name, params, snippet, definitions)
+    if (expanded := _expand_internal(context, depth, name, params, snippet,
+                                     definitions))  is not None:
+        return expanded
 
     retval = definitions.get_macro_value(name, snippet)
     if retval == snippet:
