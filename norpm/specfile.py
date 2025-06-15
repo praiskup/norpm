@@ -32,7 +32,11 @@ log = get_logger()
 
 SHELL_REGEXP_HACKS = [{
     # many packages use '%(c=%{commit0}; echo ${c:0:7})'
-    'regexp': re.compile(r'%\([a-zA-Z0-9]+=%{?([a-zA-Z0-9]+)}?\s*;\secho\s*\${[a-zA-Z0-9]+:0:([0-9]+)}'),
+    'regexp': re.compile(r'%\([a-zA-Z0-9_]+=%{?([a-zA-Z0-9]+)}?\s*;\secho\s*\${[a-zA-Z0-9]+:0:([0-9]+)}'),
+    'method': lambda x: f'%{{sub %{{{x[1]}}} 1 {x[2]}}}',
+}, {
+    # a few packages use 'echo %{git_rev} | cut -c-8'
+    'regexp': re.compile(r'%\(\s*echo\s*[\'\"]?%{?([a-zA-Z0-9_]+)}?[\'\"]?\s*\|\s*cut\s*-[cb]\s*[0-9]?-([0-9]*)'),
     'method': lambda x: f'%{{sub %{{{x[1]}}} 1 {x[2]}}}',
 }]
 
