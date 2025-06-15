@@ -47,6 +47,6 @@ There are many features yet to be implemented. Contributions are highly encourag
 - [ ] %[expressions]
 - [ ] %SOURCEN
 - [ ] Requires/BuildRequires parsing
-- [ ] built-ins, like %{sub:}, %{expand:}, etc.
+- [ ] built-ins, %{expand:}, etc.
 - [ ] %{lua:} (not safe, must be an opt-in)
 - [ ] %(shell) (not safe, must be an opt-in)
