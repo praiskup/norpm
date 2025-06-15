@@ -30,6 +30,16 @@ def test_cut_hack():
 %(echo %{git_commit} | cut -c -8)
 %(echo %{git_rev} | cut -c-8)
 %(echo "%{_git_rev}" | cut -c-8)
+%(c="%{git_commit}"; echo "${c:0:7}")
+%(c="%{git_commit}"; echo ${c:0:7})
+%(c='%{git_commit}'; echo "${c:0:8}")
+%(c=%{github_commit}; echo ${c:0:7})
 """
     for macro in data.splitlines():
-        assert SHELL_REGEXP_HACKS[1]["regexp"].match(macro)
+        matched = False
+        for matcher in SHELL_REGEXP_HACKS:
+            if matcher["regexp"].match(macro):
+                matched = True
+
+        if not matched:
+            assert "" == macro
