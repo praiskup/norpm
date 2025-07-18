@@ -2,7 +2,7 @@ RPM Macro Expansion in Python
 =============================
 
 Parse RPM macro files and spec files, and expand macros safely—without the
-potential Turing Complete side effects.
+potential Turing-Complete side effects.
 
 This is a standalone library that depends only on the standard Python library
 and [PLY](https://github.com/dabeaz/ply) (for expression parsing).
@@ -24,14 +24,15 @@ registry = system_macro_registry()
 registry["dist"] = ""
 with open("my.spec", "r", encoding="utf8") as fd:
     expanded_specfile = specfile_expand(fd.read(), registry)
-    print("Name: ", registry["name"].value)
-    print("Version: ", registry["version"].value)
+    print("Name:", registry["name"].value)
+    print("Version:", registry["version"].value)
 ```
 
 TODOs
 -----
 
-There are many features yet to be implemented. Contributions are highly encouraged!
+There are many features still to be implemented. Your contributions are welcome
+and greatly encouraged!
 
 - [x] %undefine
 - [x] Parametric macro definitions + calls
