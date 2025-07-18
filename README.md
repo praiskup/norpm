@@ -37,6 +37,7 @@ There are many features yet to be implemented. Contributions are highly encourag
 - [x] Parametric macro definitions + calls
 - [x] %if, %else parsing (generic)
 - [x] expression parsing (e.g., for %if)
+- [x] %[expressions]
 - [ ] version comparisons, like v"1" < v"1.2"
 - [ ] [functions in expressions](https://github.com/rpm-software-management/rpm/blob/8ae5f1d0db9e3c088d3163cbfc2612990702ff93/rpmio/expression.cc#L556)
 - [ ] %bcond* support
@@ -44,7 +45,6 @@ There are many features yet to be implemented. Contributions are highly encourag
 - [ ] rpmrc files (these e.g. define %optflags)
 - [ ] %include
 - [ ] %dnl
-- [ ] %[expressions]
 - [ ] %SOURCEN
 - [ ] Requires/BuildRequires parsing
 - [ ] built-ins, %{expand:}, etc.
