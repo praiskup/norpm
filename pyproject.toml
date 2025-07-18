@@ -1,0 +1,14 @@
+[project]
+name = "norpm"
+version = "1.0"
+description = "RPM Macro Expansion in Python"
+authors = [{ name="Pavel Raiskup", email="pavel@raiskup.cz" }]
+readme = "README.md"
+license = { file = "COPYING" }
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["norpm"]
