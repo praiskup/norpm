@@ -81,3 +81,12 @@ post
 1
 post
 """
+
+
+def test_expression_expansion():
+    """ Normal expression expansion """
+    assert specfile_expand("%[ 1 > 2 ]\n", MacroRegistry()) == "0\n"
+    assert specfile_expand("%[ 1 > 2 + 2 ]\n", MacroRegistry()) == "0\n"
+    assert specfile_expand("%[ 2 + 2 ]\n", MacroRegistry()) == "4\n"
+    assert specfile_expand("%[ 2 + 2 * 3 ]\n", MacroRegistry()) == "8\n"
+    assert specfile_expand("%[ 2 + 2 * %sadfasfadsf ]\n", MacroRegistry()) == "%[ 2 + 2 * %sadfasfadsf ]\n"

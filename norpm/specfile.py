@@ -478,6 +478,16 @@ def _expand_snippet(context, snippet, definitions, depth=0):
                 return hack["method"](m)
         return snippet
 
+    if snippet.startswith("%["):
+        stripped = snippet[2:-1]
+        if context.expanding:
+            expr = _specfile_expand_string(context, stripped, definitions, depth+1)
+            try:
+                return str(eval_rpm_expr(expr))
+            except SyntaxError:
+                return snippet
+        return ""
+
     if cond := _parse_condition(full_snippet):
         if context.in_expr:
             raise ParseError("%if %if")
