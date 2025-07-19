@@ -39,6 +39,7 @@ and greatly encouraged!
 - [x] %if, %else parsing (generic)
 - [x] expression parsing (e.g., for %if)
 - [x] %[expressions]
+- [x] %{expand}
 - [ ] version comparisons, like v"1" < v"1.2"
 - [ ] [functions in expressions](https://github.com/rpm-software-management/rpm/blob/8ae5f1d0db9e3c088d3163cbfc2612990702ff93/rpmio/expression.cc#L556)
 - [ ] %bcond* support
@@ -48,6 +49,7 @@ and greatly encouraged!
 - [ ] %dnl
 - [ ] %SOURCEN
 - [ ] Requires/BuildRequires parsing
-- [ ] built-ins, %{expand:}, etc.
+- [ ] %{defined:}
+- [ ] %{gsub:}
 - [ ] %{lua:} (not safe, must be an opt-in)
 - [ ] %(shell) (not safe, must be an opt-in)

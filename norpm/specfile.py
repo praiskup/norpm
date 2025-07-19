@@ -568,6 +568,11 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     if _is_special(name):
         return snippet
 
+    if name == "expand":
+        # expand params (as for every macro call), and then reexpand
+        params = _specfile_expand_string(context, params, definitions, depth+1)
+        return params
+
     if (expanded := _expand_internal(context, depth, name, params, snippet,
                                      definitions))  is not None:
         return expanded
@@ -579,7 +584,7 @@ def _expand_snippet(context, snippet, definitions, depth=0):
         return retval
     if not params:
         return retval
-    if not definitions[name].params:
+    if definitions[name].params is None:
         return retval
 
     # RPM also first expands the parameters before calling getopt()
