@@ -4,6 +4,7 @@ Parse macro file into a "macroname = unexpanded value" dictionary
 
 import glob
 from dataclasses import dataclass
+import os
 
 from norpm.macro import MacroRegistry
 from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
@@ -158,6 +159,7 @@ def _get_macro_files():
         "/usr/lib/rpm/macros",
         "/usr/lib/rpm/redhat/macros",
         "/usr/lib/rpm/macros.d/macros.*",
+        os.path.join(os.path.expanduser("~"), ".rpmmacros"),
     ]
     files = []
     for pattern in patterns:
