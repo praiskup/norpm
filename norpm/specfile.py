@@ -30,6 +30,14 @@ log = get_logger()
 # pylint: disable=too-many-statements,too-many-branches
 
 
+class ParserHooks:
+    """
+    Inherit from this method, and override mehtods you find useful.
+    """
+    def tag_found(self, name, value, tag_raw):
+        """Called when tag is found, e.g., ExclusiveArch"""
+
+
 SHELL_REGEXP_HACKS = [{
     # many packages use '%(c=%{commit0}; echo ${c:0:7})'
     'regexp': re.compile(r'%\([a-zA-Z0-9_]+=[\'\"]?%{?([a-zA-Z0-9_]+)}?[\'\"]?\s*;\s'
@@ -104,9 +112,11 @@ class _SpecContext:
     condition_stack = None
     in_expr = None
     in_comment = None
+    hooks = None
 
-    def __init__(self):
+    def __init__(self, hooks=None):
         self.condition_stack = []
+        self.hooks = hooks or ParserHooks()
 
     @property
     def expanding(self):
@@ -615,28 +625,30 @@ def _specfile_expand_string(context, string, macros, depth):
     return "".join(list(_specfile_expand_string_generator(context, string, macros, depth)))
 
 
-def _define_tags_as_macros(line, macros):
+def _define_tags_as_macros(context, line, macros):
     """Define macros from specfile tags, like %name from Name:"""
     try:
         tag_raw, definition = line.split(":", maxsplit=1)
     except ValueError:
         return
     tag = tag_raw.strip().lower()
+    value = definition.strip()
+    context.hooks.tag_found(tag, value, tag_raw)
     if tag in [
         "name",
         "release",
         "version",
         "epoch",
     ]:
-        macros[tag] = definition.strip()
+        macros[tag] = value
         macros[tag.upper()] = definition.strip()
 
 
-def specfile_expand(content, macros):
+def specfile_expand(content, macros, hooks=None):
     """Expand specfile content (string), return string.  Tags (like Name:) are
     interpreted.  See specfile_expand_generator().
     """
-    context = _SpecContext()
+    context = _SpecContext(hooks)
     return _specfile_expand(context, content, macros)
 
 
@@ -688,7 +700,7 @@ def _specfile_expand_generator(context, content, macros):
                 yield ''.join([line]+list(lines))
                 continue
             if line and line[-1] == "\n":
-                _define_tags_as_macros(line, macros)
+                _define_tags_as_macros(context, line, macros)
                 yield line
             else:
                 buffer = line
