@@ -90,3 +90,5 @@ def test_expression_expansion():
     assert specfile_expand("%[ 2 + 2 ]\n", MacroRegistry()) == "4\n"
     assert specfile_expand("%[ 2 + 2 * 3 ]\n", MacroRegistry()) == "8\n"
     assert specfile_expand("%[ 2 + 2 * %sadfasfadsf ]\n", MacroRegistry()) == "%[ 2 + 2 * %sadfasfadsf ]\n"
+    assert specfile_expand('%[ 1 ? "a" : "b" ]', MacroRegistry()) == "a"
+    assert specfile_expand('%[ 0 ? "a" : "b" ]', MacroRegistry()) == "b"
