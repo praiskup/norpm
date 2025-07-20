@@ -14,6 +14,7 @@ tokens = [
     'AND','OR', 'NOT',
     'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
     'LPAREN', 'RPAREN',
+    'QUESTION', 'COLON',
 ]
 
 
@@ -33,8 +34,10 @@ t_NE      = r'!='
 t_LPAREN  = r'\('
 t_RPAREN  = r'\)'
 t_NOT     = r'!'
+t_QUESTION = r'\?'
+t_COLON = r':'
 
-t_ignore = ' \t'
+t_ignore = ' \t\n'
 
 
 def t_NUMBER(t):
@@ -63,6 +66,7 @@ lexer = lex()
 
 
 precedence = (
+    ('right', 'QUESTION', 'COLON'),
     ('left', 'OR'),
     ('left', 'AND'),
     ('nonassoc', 'LT', 'LE', 'GT', 'GE', 'EQ', 'NE'),
@@ -71,6 +75,11 @@ precedence = (
     ('right', 'NOT'),
     ('right', 'UMINUS'),
 )
+
+
+def p_expression_ternary(p):
+    'expression : expression QUESTION expression COLON expression'
+    p[0] = p[3] if p[1] else p[5]
 
 
 def p_expression(p):
@@ -147,7 +156,7 @@ def p_expr_not(p):
 parser = yacc(debug=False, write_tables=False, optimize=True)
 
 
-def eval_rpm_expr(text: str) -> int:
+def eval_rpm_expr(text: str):
     """
     Evaluate RPM-style expression
     """
