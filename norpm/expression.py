@@ -4,6 +4,7 @@
 Parse RPM expressions.
 """
 
+import operator
 from ply.lex import lex
 from ply.yacc import yacc
 
@@ -41,14 +42,27 @@ t_ignore = ' \t\n'
 
 
 def t_NUMBER(t):
-    r'\d+'
-    t.value = int(t.value)
+    r'(\d|@\d+@)+'
+    orig_value = t.value
+    def _expanding_value(expander=None):
+        if expander:
+            return int(expander(orig_value))
+        return int(orig_value)
+    t.value = _expanding_value
     return t
 
 
 def t_STRING(t):
     r'"([^\\\n]|(\\.))*?"'
     t.value = t.value[1:-1]  # Remove surrounding quotes
+    orig_value = t.value
+
+    def _expanding_value(expander=None):
+        if expander:
+            return expander(orig_value)
+        return orig_value
+
+    t.value = _expanding_value
     return t
 
 
@@ -67,9 +81,9 @@ lexer = lex()
 
 precedence = (
     ('right', 'QUESTION', 'COLON'),
-    ('left', 'OR'),
     ('left', 'AND'),
-    ('nonassoc', 'LT', 'LE', 'GT', 'GE', 'EQ', 'NE'),
+    ('left', 'OR'),
+    ('left', 'LT', 'LE', 'GT', 'GE', 'EQ', 'NE'),
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE'),
     ('right', 'NOT'),
@@ -79,7 +93,10 @@ precedence = (
 
 def p_expression_ternary(p):
     'expression : expression QUESTION expression COLON expression'
-    p[0] = p[3] if p[1] else p[5]
+    expr = p[1]
+    lhs = p[3]
+    rhs = p[5]
+    p[0] = lambda x=None: lhs(x) if expr(x) else rhs(x)
 
 
 def p_expression(p):
@@ -94,14 +111,16 @@ def p_expr_binop(p):
          | expr TIMES expr
          | expr DIVIDE expr
     """
+    lhs = p[1]
+    rhs = p[3]
     if p[2] == '+':
-        p[0] = p[1] + p[3]
+        p[0] = lambda x=None: lhs(x) + rhs(x)
     elif p[2] == '-':
-        p[0] = p[1] - p[3]
+        p[0] = lambda x=None: lhs(x) - rhs(x)
     elif p[2] == '*':
-        p[0] = p[1] * p[3]
+        p[0] = lambda x=None: lhs(x) * rhs(x)
     elif p[2] == '/':
-        p[0] = p[1] // p[3]
+        p[0] = lambda x=None: lhs(x) // rhs(x)
 
 
 def p_expr_comp(p):
@@ -113,10 +132,17 @@ def p_expr_comp(p):
          | expr EQ expr
          | expr NE expr
     """
-    ops = {'<': p[1] < p[3], '<=': p[1] <= p[3],
-           '>': p[1] > p[3], '>=': p[1] >= p[3],
-           '==': p[1] == p[3], '!=': p[1] != p[3]}
-    p[0] = 1 if ops[p[2]] else 0
+    lhs = p[1]
+    rhs = p[3]
+    op = {
+        '==': operator.eq,
+        '!=': operator.ne,
+        '<': operator.lt,
+        '<=': operator.le,
+        '>': operator.gt,
+        '>=': operator.ge,
+    }[p[2]]
+    p[0] = lambda x=None: int(op(lhs(x), rhs(x)))
 
 
 def p_expr_logic(p):
@@ -124,15 +150,18 @@ def p_expr_logic(p):
     expr : expr AND expr
          | expr OR expr
     """
+    lhs = p[1]
+    rhs = p[3]
     if p[2] == '&&':
-        p[0] = 1 if (p[1] and p[3]) else 0
+        p[0] = lambda x=None: lhs(x) and rhs(x)
     else:
-        p[0] = 1 if (p[1] or p[3]) else 0
+        p[0] = lambda x=None: lhs(x) or rhs(x)
 
 
 def p_expr_uminus(p):
     'expr : MINUS expr %prec UMINUS'
-    p[0] = -p[2]
+    num = p[2]
+    p[0] = lambda x=None: -num(x)
 
 
 def p_expr_group(p):
@@ -150,14 +179,16 @@ def p_expr_string(p):
 
 def p_expr_not(p):
     'expr : NOT expr'
-    p[0] = 1 if not p[2] else 0
+    expr = p[2]
+    p[0] = lambda x=None: int(not expr(x))
 
 
 parser = yacc(debug=False, write_tables=False, optimize=True)
 
 
-def eval_rpm_expr(text: str):
+def eval_rpm_expr(text: str, expander=None):
     """
     Evaluate RPM-style expression
     """
-    return parser.parse(text, lexer=lexer)
+    tree = parser.parse(text, lexer=lexer)
+    return tree(expander)

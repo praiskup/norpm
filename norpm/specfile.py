@@ -208,6 +208,9 @@ class _Snippet:
     macro_starts_line: bool = True
     def __str__(self):
         return self.text
+    def startswith(self, start):
+        "bypass down to str()"
+        return self.text.startswith(start)
 
 
 def _specfile_split_generator(context, string, macros):
@@ -472,6 +475,37 @@ def _eval_expression(snippet):
     return False
 
 
+class _HideAndSeekMacro:
+    """
+    It is rather complicated to implement a regular expression for a macro call,
+    hence even in the PLY lexer.  However, we do have a norpm builtin for
+    parsing macro calls, so - before we handover the string to lexer - we first
+    replace macro calls with '@ID@' strings (easy to cover by regexp).
+    """
+    def __init__(self, context, macros, depth):
+        self.lookup = []
+        self.context = context
+        self.macros = macros
+        self.depth = depth
+
+    def new_macro(self, macro):
+        "Replace macro string with @ID@ and remember"
+        new_id = len(self.lookup)
+        self.lookup.append(str(macro))
+        return f'@{new_id}@'
+
+    def expand(self, string):
+        "Revert %macro => @ID@ action in given string"
+        for mid, mcall in enumerate(self.lookup):
+            pattern = f'@{mid}@'
+            # each call at most once
+            string = string.replace(pattern, mcall)
+        return _specfile_expand_string(self.context, string, self.macros, self.depth+1)
+
+    def __call__(self, string):
+        return self.expand(string)
+
+
 def _expand_snippet(context, snippet, definitions, depth=0):
     full_snippet = snippet
     snippet = full_snippet.text
@@ -491,9 +525,20 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     if snippet.startswith("%["):
         stripped = snippet[2:-1]
         if context.expanding:
-            expr = _specfile_expand_string(context, stripped, definitions, depth+1)
             try:
-                return str(eval_rpm_expr(expr))
+                filtered_output = []
+                hasm = _HideAndSeekMacro(context, definitions, depth)
+                for part in _specfile_split_generator(context, stripped,
+                                                      definitions):
+                    if not part.startswith("%"):
+                        filtered_output.append(str(part))
+                        continue
+                    filtered_output.append(hasm.new_macro(part))
+                parsable = "".join(filtered_output)
+                try:
+                    return str(eval_rpm_expr(parsable, hasm))
+                except ValueError:
+                    return str(full_snippet)
             except SyntaxError:
                 return snippet
         return ""
@@ -511,7 +556,11 @@ def _expand_snippet(context, snippet, definitions, depth=0):
             expr = _specfile_expand_string(context, expr, definitions, depth+1)
             context.in_expr = False
             if iftype == "%if":
-                expr = _eval_expression(expr)
+                try:
+                    expr = _eval_expression(expr)
+                except SyntaxError:
+                    log.error("Failed to parse 'if' expression: %s", expr)
+                    expr = False
             else:
                 expr = True  # todo arch
         else:
@@ -558,12 +607,7 @@ def _expand_snippet(context, snippet, definitions, depth=0):
         if defined and alt:
             return alt
 
-        # TODO: add support for bcond
-        with_hack = ""
-        if name.startswith("with_") or name.startswith("without_"):
-            with_hack = snippet
-
-        return definitions[name].value if defined else with_hack
+        return definitions[name].value if defined else ""
 
     if _is_special(name):
         return snippet

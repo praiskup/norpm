@@ -64,6 +64,7 @@ class MacroRegistry:
         # The %goname method is typically defined by %gometa, which is a
         # complicated lua script that we don't interpret.
         self["goname"] = "NORPM_HACK_NO_GONAME"
+        self["verbose"] = "0"
 
     def __getitem__(self, name):
         return self.db[name]
