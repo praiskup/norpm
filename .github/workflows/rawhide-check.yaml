@@ -1,0 +1,25 @@
+---
+name: Parse all Rawhide specfiles
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  run-python-script:
+    runs-on: ubuntu-latest
+    container: quay.io/norpm/test-container:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate versions
+        run: PYTHONPATH=`pwd` rawhide-tests/parse_version_release.py > /our-run.output
+
+      - name: Comparator deps
+        run: dnf install -y python3-pyyaml
+
+      - name: Compare results
+        run: rawhide-tests/epoch_release_comparator.py /rpmspec.output /our-run.output rawhide-tests/expected.yaml
