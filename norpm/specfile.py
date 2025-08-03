@@ -648,10 +648,14 @@ def _expand_snippet(context, snippet, definitions, depth=0):
         definitions.define(str(argn+1), arg, special=True)
     definitions.define("#", str(len(args)), special=True)
     definitions.define("0", name, special=True)
+    definitions.define("*", ' '.join(args), special=True)
+    definitions.define("**", params, special=True)
 
     retval = _specfile_expand_string(context, retval, definitions, depth+1)
 
     # Undefine temporary macros
+    definitions.undefine("**")
+    definitions.undefine("*")
     for opt, _ in optlist:
         definitions.undefine(opt)
         definitions.undefine(opt+"*")
