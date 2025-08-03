@@ -131,9 +131,7 @@ def is_macro_character(c):
     """Return true if character c can be part of macro name"""
     if c.isalnum():
         return True
-    if c == '-':
-        return True
-    if c == '_':
+    if c in ["-", "_", "*", "#"]:
         return True
     return False
 

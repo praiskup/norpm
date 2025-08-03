@@ -110,6 +110,13 @@ def test_expand_parametric_definition():
     assert db["nah"].params == "param"
 
 
+def test_expand_parametric_stars():
+    db = MacroRegistry()
+    assert specfile_expand_string("%global nah(d:)\\\n%*\\\n%**\n"
+                                  "%nah before -d d after", db) \
+        == '\nbefore after\nbefore -d d after'
+
+
 @pytest.mark.parametrize("statement", ["%define", "%global"])
 def test_specfile_expand_generator(statement):
     db = MacroRegistry()
