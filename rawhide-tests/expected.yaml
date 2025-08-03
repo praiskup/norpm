@@ -26,9 +26,6 @@ errors:
   checkpointctl.spec:
     version: "%(b=%{built_tag_strip}; echo ${b/-/\"~\"})"
     epoch: "1"
-  cxsc.spec:
-    version: "%(tr - . <<< %{upstreamver})"
-    epoch: "(none)"
   dokuwiki.spec:
     version: "%(rel=\"%{releasenum}\"; echo \"${rel//-/}\")"
     epoch: "(none)"
