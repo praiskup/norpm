@@ -1,0 +1,215 @@
+---
+lines: 24543
+
+failures:
+  go-vendor-tools.spec: Unexpected error.
+  re2.spec: Unexpected error.
+
+errors:
+  nodejs24.spec:
+    reason: something wrong with node
+    epoch: "%{node_epoch}"
+    version: "%{node_version}"
+  xscreensaver.spec:
+    reason: missing dnl
+    epoch: "1"
+    version: "6.12.1"
+  Singular.spec:
+    epoch: '(none)'
+    version: '%(tr - . <<< %{upstreamver})'
+  aerc.spec:
+    epoch: '(none)'
+    version: '%{lua:'
+  cachelib.spec:
+    epoch: '(none)'
+    version: "17^%(echo %{tag} | sed -e 's|.00$||' | sed -e 's|.||g')"
+  checkpointctl.spec:
+    version: "%(b=%{built_tag_strip}; echo ${b/-/\"~\"})"
+    epoch: "1"
+  cxsc.spec:
+    version: "%(tr - . <<< %{upstreamver})"
+    epoch: "(none)"
+  dokuwiki.spec:
+    version: "%(rel=\"%{releasenum}\"; echo \"${rel//-/}\")"
+    epoch: "(none)"
+  edflib.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  emacs-vm.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  enigma.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  enkiTS.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  expat.spec:
+    version: "%(echo %{unversion} | sed 's/_/./g')"
+    epoch: "(none)"
+  fcitx5-mozc.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  fish.spec:
+    version: "4.0.2~beta.1^git1.%{lua:print(string.sub(rpm.expand('%{githash}'), 1, 11))}"
+    epoch: "(none)"
+  foonathan-memory.spec:
+    version: "%(echo %{tag} | sed 's/-/./')"
+    epoch: "(none)"
+  freefem++.spec:
+    version: "%(echo %tarvers | tr - .)"
+    epoch: "(none)"
+  gap-pkg-4ti2interface.spec:
+    version: "%(tr - . <<< %{upver})"
+    epoch: "(none)"
+  google-noto-fonts.spec:
+    version: "%{lua: print(string.format(\"%04d%02d%02d\", tonumber(rpm.expand(\"%{majorver}\")), tonumber(rpm.expand(\"%{minorver}\")), tonumber(rpm.expand(\"%{patchver}\"))))}"
+    epoch: "(none)"
+  gp2c.spec:
+    version: "%{gsub %{upver} pl .}"
+    epoch: "(none)"
+  hut.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  insight.spec:
+    version: "%(echo %{ver} | tr - .).20220502"
+    epoch: "(none)"
+  jcip-annotations.spec:
+    version: "%(echo -n %{github_version} | sed 's/-/./')"
+    epoch: "(none)"
+  jd.spec:
+    version: "0.14.0~alpha"
+    epoch: "1"
+  kismet.spec:
+    version: "0.0.%(echo %_version | tr - .)"
+    epoch: "(none)"
+  lusol.spec:
+    version: "%(sed 's/-//g' <<< %{upver})"
+    epoch: "(none)"
+  mcrouter.spec:
+    version: "0.41.0.%(echo %{tag} | sed -e 's|.00$||' | sed -e 's|.||g')"
+    epoch: "(none)"
+  mesa-compat.spec:
+    version: "%{lua:ver = string.gsub(rpm.expand(\"%{ver}\"), \"-\", \"~\"); print(ver)}"
+    epoch: "(none)"
+  mesa.spec:
+    version: "%{lua:ver = string.gsub(rpm.expand(\"%{ver}\"), \"-\", \"~\"); print(ver)}"
+    epoch: "(none)"
+  moby-engine.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  mstflint.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  netmask.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  oci-seccomp-bpf-hook.spec:
+    version: "%(b=%{built_tag_strip}; echo ${b/-/\"~\"})"
+    epoch: "(none)"
+  ongres-scram.spec:
+    version: "%(echo %{upstream_version} | sed 's/-/~/g')"
+    epoch: "(none)"
+  openscad-bosl2.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  pack.spec:
+    version: "%(b=%{built_tag_strip}; echo ${b/-/\"~\"})"
+    epoch: "(none)"
+  parlaylib.spec:
+    version: "2.3.1^20230215git%(c=36459f42a84207330eae706c47e6fab712e6a149; echo ${c:0:7})"
+    epoch: "(none)"
+  perftest.spec:
+    version: "%{lua: print((string.gsub(rpm.expand(\"%{upstream_ver}\"),\"-\",\".\")))}"
+    epoch: "(none)"
+  perl-Business-ISBN.spec:
+    version: "%(echo '%{cpan_version}' | tr '_' '.'})"
+    epoch: "(none)"
+  perl-Crypt-PasswdMD5.spec:
+    version: "%(echo '%{cpan_version}' | sed 's/.(.)/.1./')"
+    epoch: "(none)"
+  perl-Finance-Quote.spec:
+    version: "%(LANG=C printf \"%.4f\" %{cpan_version})"
+    epoch: "(none)"
+  perl-Geo-IPfree.spec:
+    version: "%(echo '%{cpan_version}' | sed 's/(....)(.)/1.2/')"
+    epoch: "(none)"
+  perl-Graph.spec:
+    version: "%(echo '%{cpan_version}' | sed 's/(...)(.)/1.2/')"
+    epoch: "(none)"
+  perl-Log-Any-IfLOG.spec:
+    version: "%(echo '%{cpan_version}' | sed 's/(...)(.)/1.2/')"
+    epoch: "(none)"
+  perl-Math-BigInt.spec:
+    version: "%(echo %{cpan_version} | sed 's/(.....)/1./')"
+    epoch: "1"
+  perl-MooseX-App.spec:
+    version: "%(echo '%{cpan_version}' | sed 's/(...)(.)/1.2/')"
+    epoch: "(none)"
+  perl-Net-Whois-Raw.spec:
+    version: "%(echo '%{cpan_version}' | sed 's/(...)(.)/1.2/')"
+    epoch: "(none)"
+  perl-Path-FindDev.spec:
+    version: "%(echo '%{cpan_version}' | tr -d 'v')"
+    epoch: "(none)"
+  perl-Test-Compile.spec:
+    version: "%(echo '%{cpan_version}' | tr -d 'v')"
+    epoch: "(none)"
+  perl-Test-Differences.spec:
+    version: "%(LANG=C printf \"%.4f\" %{cpan_version})"
+    epoch: "(none)"
+  perl-Test-Output.spec:
+    version: "%(echo '%{cpan_version}' | sed 's/(...)(.)/1.2/')"
+    epoch: "(none)"
+  perl-TestML.spec:
+    version: "%(echo '%{upstream_version}' | tr _ .)"
+    epoch: "(none)"
+  perl-URI-Encode.spec:
+    version: "%(echo '%{cpan_version}' | tr -d 'v')"
+    epoch: "(none)"
+  perl-WebService-Rajce.spec:
+    version: "%(echo '%{cpan_version}' | sed 's/(....)(.)/1.2/')"
+    epoch: "(none)"
+  perl-XML-Catalog.spec:
+    version: "%(echo '%{cpan_version}' | tr -d 'v')"
+    epoch: "(none)"
+  perl-XML-LibXSLT.spec:
+    version: "%(echo '%{cpan_version}' | sed 's/(....)(.)/1.2/')"
+    epoch: "(none)"
+  petsc.spec:
+    reason: "uses %global epoch 0, but doesn't set Epoch"
+    version: "3.23.3"
+    epoch: "0"
+  pgn-extract.spec:
+    version: "%(echo %{srcversion} | tr - .)"
+    epoch: "(none)"
+  phototonic.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  pqmarble.spec:
+    version: "2.0.0~^1.%{lua:print(macros.commit:sub(1,7))}"
+    epoch: "(none)"
+  python-beartype.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  python-curio.spec:
+    version: "1.6^1.%{lua:print(macros.commit:sub(1,7))}"
+    epoch: "(none)"
+  python-medimages4tests.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  ruby.spec:
+    version: "3.4.4~%(stat --printf='@%Y' %{_sourcedir}/%{ruby_archive}.tar.xz | date -f - +\"%Y%m%d\")preview2"
+    epoch: "(none)"
+  span.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  stargz-snapshotter.spec:
+    version: "%(b=%{built_tag_strip}; echo ${b/-/\"~\"})"
+    epoch: "(none)"
+  sweet-gtk-theme.spec:
+    version: "6.0^%("
+    epoch: "(none)"
+  vcpkg.spec:
+    version: "%(echo %{repo_tag} | sed 's/-/./g')"
+    epoch: "(none)"
