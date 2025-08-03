@@ -3,10 +3,23 @@ Call getopt() directly.  The Python variant doesn't support
 the %foo(:-:) syntax.
 """
 
+import os
 import ctypes
 
 # Load libc
 libc = ctypes.CDLL("libc.so.6")
+
+def suppress_stderr(func, *args):
+    """ avoid stderr polluting by glibc's getopt """
+    original_stderr_fd = os.dup(2)
+    devnull_fd = os.open(os.devnull, os.O_WRONLY)
+    os.dup2(devnull_fd, 2)
+    os.close(devnull_fd)
+    try:
+        return func(*args)
+    finally:
+        os.dup2(original_stderr_fd, 2)
+        os.close(original_stderr_fd)
 
 def getopt(params, optstring):
     """
@@ -32,7 +45,7 @@ def getopt(params, optstring):
     output = []
 
     while True:
-        opt = libc.getopt(argc, argv_array, optstring)
+        opt = suppress_stderr(libc.getopt, argc, argv_array, optstring)
         if opt == -1:
             break
 
