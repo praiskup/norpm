@@ -14,12 +14,6 @@ from norpm.macro import MacroRegistry
 from norpm.macrofile import system_macro_registry
 
 db = MacroRegistry()
-patterns = [
-    "/usr/lib/rpm/macros",
-    "/usr/lib/rpm/redhat/macros",
-    "/usr/lib/rpm/macros.d/macros.*",
-]
-
 db = system_macro_registry()
 db.known_norpm_hacks()
 
@@ -30,17 +24,17 @@ for spec in sorted(glob.glob("/rpm-specs/*.spec")):
     basename = os.path.basename(spec)
     try:
         with open(spec, "r", encoding="utf8") as fd:
-            # we don't want to modify the db
-            backup_db = copy.deepcopy(db)
+            # we don't want to leak macros from one spec file to another
+            temp_db = copy.deepcopy(db)
             try:
-                specfile_expand(fd.read(), backup_db)
+                specfile_expand(fd.read(), temp_db)
             except Exception:  # pylint: disable=broad-exception-caught
                 print(f"{basename}:Unexpected error")
                 continue
             epoch = "(none)"
-            if "epoch" in backup_db:
-                epoch = specfile_expand_string("%epoch", backup_db)
-            version = specfile_expand_string("%version", backup_db)
+            if "epoch" in temp_db:
+                epoch = specfile_expand_string("%epoch", temp_db)
+            version = specfile_expand_string("%version", temp_db)
             print(f"{basename}:{epoch}:{version}", flush=True)
     except RecursionError:
         print(f"{basename}: RecursionError", flush=True)
