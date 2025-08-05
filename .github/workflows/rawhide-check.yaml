@@ -16,10 +16,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate versions
-        run: PYTHONPATH=`pwd` rawhide-tests/parse_version_release.py > /our-run.output
+        run: PYTHONPATH=`pwd` rawhide-tests/parse_epoch_version.py > /our-run.output
 
       - name: Comparator deps
         run: dnf install -y python3-pyyaml
 
       - name: Compare results
-        run: rawhide-tests/epoch_release_comparator.py /rpmspec.output /our-run.output rawhide-tests/expected.yaml
+        run: rawhide-tests/epoch_version_comparator.py /rpmspec.output /our-run.output rawhide-tests/expected.yaml
