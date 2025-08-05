@@ -109,6 +109,14 @@ class MacroRegistry:
 
         del self.db[name]
 
+    def clear(self, name):
+        """
+        Remove the macro from database, not just "pop once".
+        """
+        while name in self.db:
+            self.undefine(name)
+
+
     @property
     def empty(self):
         """Return True if no macro is defined."""
