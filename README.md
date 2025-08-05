@@ -40,9 +40,9 @@ and greatly encouraged!
 - [x] expression parsing (e.g., for %if)
 - [x] %[expressions]
 - [x] %{expand}
+- [x] %bcond* support
 - [ ] version comparisons, like v"1" < v"1.2"
 - [ ] [functions in expressions](https://github.com/rpm-software-management/rpm/blob/8ae5f1d0db9e3c088d3163cbfc2612990702ff93/rpmio/expression.cc#L556)
-- [ ] %bcond* support
 - [ ] %if[n]arch
 - [ ] rpmrc files (these e.g. define %optflags)
 - [ ] %include
