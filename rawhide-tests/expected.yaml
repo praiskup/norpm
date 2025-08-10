@@ -10,10 +10,6 @@ errors:
     reason: something wrong with node
     epoch: "%{node_epoch}"
     version: "%{node_version}"
-  xscreensaver.spec:
-    reason: missing dnl
-    epoch: "1"
-    version: "6.12.1"
   Singular.spec:
     epoch: '(none)'
     version: '%(tr - . <<< %{upstreamver})'
@@ -50,9 +46,6 @@ errors:
   fcitx5-mozc.spec:
     version: "%{lua:"
     epoch: "(none)"
-  fish.spec:
-    version: "4.0.2~beta.1^git1.%{lua:print(string.sub(rpm.expand('%{githash}'), 1, 11))}"
-    epoch: "(none)"
   foonathan-memory.spec:
     version: "%(echo %{tag} | sed 's/-/./')"
     epoch: "(none)"
@@ -77,9 +70,6 @@ errors:
   jcip-annotations.spec:
     version: "%(echo -n %{github_version} | sed 's/-/./')"
     epoch: "(none)"
-  jd.spec:
-    version: "0.14.0~alpha"
-    epoch: "1"
   kismet.spec:
     version: "0.0.%(echo %_version | tr - .)"
     epoch: "(none)"
