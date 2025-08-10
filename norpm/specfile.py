@@ -52,6 +52,7 @@ SHELL_REGEXP_HACKS = [{
 
 
 class _Builtin:
+    expand_params = True
     @classmethod
     def eval(cls, snippet, params, db):
         """evaluate the builtin, return the expanded value"""
@@ -62,6 +63,13 @@ class _BuiltinUndefine(_Builtin):
     @classmethod
     def eval(cls, snippet, params, db):
         db.undefine(params[0])
+        return ""
+
+
+class _BuiltinDnl(_Builtin):
+    expand_params = False
+    @classmethod
+    def eval(cls, _snippet, _params, _db):
         return ""
 
 
@@ -84,6 +92,7 @@ class _BuiltinSub(_Builtin):
 
 
 BUILTINS = {
+    "dnl": _BuiltinDnl,
     "sub": _BuiltinSub,
     "undefine": _BuiltinUndefine,
 }
@@ -379,6 +388,8 @@ def _specfile_split_generator(context, string, macros):
                 yield _snippet()
                 if _is_condition(buffer) and macro_starts_line:
                     buffer = ""
+                elif buffer.startswith("%dnl"):
+                    buffer = ""
                 else:
                     buffer = "\n"
                 state = "TEXT"
@@ -427,7 +438,8 @@ def _expand_internal(context, depth, internal, params, snippet, db):
         return None
     if not context.expanding:
         return ""
-    params = _specfile_expand_string(context, params, db, depth+1)
+    if builtin.expand_params:
+        params = _specfile_expand_string(context, params, db, depth+1)
     return builtin.eval(snippet, params.split(), db)
 
 
