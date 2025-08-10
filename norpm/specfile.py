@@ -66,6 +66,12 @@ class _BuiltinUndefine(_Builtin):
         return ""
 
 
+class _BuiltinDefined(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, db):
+        return str(int(params[0] in db))
+
+
 class _BuiltinDnl(_Builtin):
     expand_params = False
     @classmethod
@@ -92,6 +98,7 @@ class _BuiltinSub(_Builtin):
 
 
 BUILTINS = {
+    "defined": _BuiltinDefined,
     "dnl": _BuiltinDnl,
     "sub": _BuiltinSub,
     "undefine": _BuiltinUndefine,

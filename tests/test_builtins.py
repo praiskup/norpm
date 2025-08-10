@@ -16,3 +16,19 @@ def test_dnl():
     assert specfile_expand_string(spec, MacroRegistry()) == '''\
 %foo\nafter
 '''
+
+
+def test_defined():
+    "test %defined macro"
+    spec = """\
+%dnl %define foo bar
+%defined foo
+%define foo bar
+%{defined: foo}
+end
+"""
+    assert specfile_expand_string(spec, MacroRegistry()) == '''\
+0
+1
+end
+'''
