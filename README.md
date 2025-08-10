@@ -42,6 +42,7 @@ and greatly encouraged!
 - [x] %{expand}
 - [x] %bcond* support
 - [x] %dnl
+- [x] %{defined:}
 - [ ] version comparisons, like v"1" < v"1.2"
 - [ ] [functions in expressions](https://github.com/rpm-software-management/rpm/blob/8ae5f1d0db9e3c088d3163cbfc2612990702ff93/rpmio/expression.cc#L556)
 - [ ] %if[n]arch
@@ -49,7 +50,6 @@ and greatly encouraged!
 - [ ] %include
 - [ ] %SOURCEN
 - [ ] Requires/BuildRequires parsing
-- [ ] %{defined:}
 - [ ] %{gsub:}
 - [ ] %{lua:} (not safe, must be an opt-in)
 - [ ] %(shell) (not safe, must be an opt-in)
