@@ -1,16 +1,14 @@
 Name:           python-norpm
-Version:        1.2
+Version:        1.3
 Release:        1%?dist
 Summary:        RPM Macro Expansion in Python
 
 License:        LGPL-2.1-or-later
-URL:            hhttps://github.com/praiskup/norpm
+URL:            https://github.com/praiskup/norpm
 Source:         %pypi_source norpm
 
 BuildArch:      noarch
 BuildRequires:  python3-devel
-# Test dependencies:
-BuildRequires:  python3dist(pytest)
 
 
 %global _description %{expand:
@@ -35,7 +33,7 @@ Summary:        %summary
 
 
 %generate_buildrequires
-%pyproject_buildrequires
+%pyproject_buildrequires -g test
 
 
 %build
@@ -53,11 +51,10 @@ Summary:        %summary
 
 
 %files -n python3-norpm -f %pyproject_files
-%license COPYING
 %doc README.md
 %_bindir/norpm-expand-specfile
 
 
 %changelog
-* Mon Aug 11 2025 Pavel Raiskup <praiskup@redhat.com> - 1.2-1
+* Mon Aug 11 2025 Pavel Raiskup <praiskup@redhat.com> - 1.3-1
 - Initial packaging
