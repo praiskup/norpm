@@ -1,5 +1,3 @@
-#!/bin/python3
-
 """
 Expand rpm specfile, using the system macro definitions.
 """
