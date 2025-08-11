@@ -13,6 +13,11 @@ dependencies = [
 [project.scripts]
 norpm-expand-specfile = "norpm.cli.expand_specfile:_main"
 
+[project.urls]
+Homepage = "https://github.com/praiskup/norpm"
+Repository = "https://github.com/praiskup/norpm.git"
+Issues = "https://github.com/praiskup/norpm/issues"
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
