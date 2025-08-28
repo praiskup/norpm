@@ -103,6 +103,7 @@ def macrofile_split_generator(file_contents, inspec=False):
             if c == Special("\n"):
                 if not inspec:
                     ctx.value += "\n"
+                    ctx.state = "VALUE"
                 continue
             if c.isspace():
                 continue
@@ -135,7 +136,7 @@ def macrofile_split_generator(file_contents, inspec=False):
                     ctx.value += c
                 continue
             if c == '\n' and not inspec:
-                yield ctx.macroname, ctx.value, ctx.params
+                yield ctx.macroname, ctx.value.rstrip(), ctx.params
                 _reset()
                 continue
 
@@ -148,10 +149,10 @@ def macrofile_split_generator(file_contents, inspec=False):
             continue
 
     if ctx.state == "VALUE":
-        yield ctx.macroname, ctx.value, ctx.params
+        yield ctx.macroname, ctx.value.rstrip(), ctx.params
 
     if ctx.state == "VALUE_START" and inspec:
-        yield ctx.macroname, ctx.value, ctx.params
+        yield ctx.macroname, ctx.value.rstrip(), ctx.params
 
 
 def _get_macro_files():

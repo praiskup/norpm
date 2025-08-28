@@ -50,6 +50,15 @@ def test_newline():
         macros)
     assert macros.to_dict() == {"foo": ("\n %bar blah\n and blah",)}
 
+def test_trailing_space():
+    macros = MacroRegistry()
+    macrofile_parse(
+        "%foo \\\n"
+        " %bar blah \\\n"
+        " and spaces:    	",
+        macros)
+    assert macros.to_dict() == {"foo": ("\n %bar blah \n and spaces:",)}
+
 
 def test_backslashed():
     macros = MacroRegistry()
@@ -87,13 +96,16 @@ def test_whitespace_start():
 
 def test_inspec_parser():
     parts = list(macrofile_split_generator("%foo \nblah\n", inspec=True))
-    assert parts == [("foo", "\nblah\n", None)]
+    assert parts == [("foo", "\nblah", None)]
 
     parts = list(macrofile_split_generator("%foo() \nblah\n", inspec=True))
-    assert parts == [("foo", "\nblah\n", "")]
+    assert parts == [("foo", "\nblah", "")]
+
+    parts = list(macrofile_split_generator("%foo() \nblah	  \n", inspec=True))
+    assert parts == [("foo", "\nblah", "")]
 
     parts = list(macrofile_split_generator("%foo(p: ) \nblah\n", inspec=True))
-    assert parts == [("foo", "\nblah\n", "p: ")]
+    assert parts == [("foo", "\nblah", "p: ")]
 
 def test_forgemeta_parser():
     macro_def = """\
