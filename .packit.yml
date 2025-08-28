@@ -1,0 +1,29 @@
+---
+specfile_path: python-norpm.spec
+
+srpm_build_deps:
+  - python3-build
+  - python3-setuptools
+
+actions:
+  create-archive:
+    - python3 -m build
+    - bash -c "ls -1t ./dist/*.tar.gz | head -n 1"
+  get-current-version: "sed -n 's/^version = \"\\(.*\\)\\\"/\\1/p' pyproject.toml"
+
+
+jobs:
+  - &copr
+    job: copr_build
+    trigger: pull_request
+    metadata:
+      targets:
+        - fedora-all
+        - epel-10-all
+
+  - <<: *copr
+    trigger: commit
+    metadata:
+      owner: "praiskup"
+      project: "flask-whooshee-prerelease"
+      branch: main
