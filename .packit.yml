@@ -25,5 +25,5 @@ jobs:
     trigger: commit
     metadata:
       owner: "praiskup"
-      project: "flask-whooshee-prerelease"
+      project: "norpm-ci"
       branch: main
