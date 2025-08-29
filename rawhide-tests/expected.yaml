@@ -1,8 +1,7 @@
 ---
 lines: 24543
 
-failures:
-  re2.spec: Unexpected error.
+failures: {}
 
 errors:
   nodejs24.spec:
@@ -187,6 +186,9 @@ errors:
   python-medimages4tests.spec:
     version: "%{lua:"
     epoch: "(none)"
+  re2.spec:
+    version: "%(echo '%{tag}' | tr -d -)"
+    epoch: "1"
   ruby.spec:
     version: "3.4.4~%(stat --printf='@%Y' %{_sourcedir}/%{ruby_archive}.tar.xz | date -f - +\"%Y%m%d\")preview2"
     epoch: "(none)"
