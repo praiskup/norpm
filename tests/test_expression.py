@@ -117,3 +117,14 @@ YES
 1
 1
 """
+
+
+def test_empty_expansion_in_epxr():
+    """ Normal expression expansion """
+    assert specfile_expand("""\
+%[ %{?_nonexistingsomething} > -1 ]
+%[ 0 || %{?_nonexistingsomething} ]
+""", MacroRegistry()) == """\
+1
+0
+"""

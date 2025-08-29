@@ -46,7 +46,10 @@ def t_NUMBER(t):
     orig_value = t.value
     def _expanding_value(expander=None):
         if expander:
-            return int(expander(orig_value))
+            expanded = expander(orig_value)
+            if not expanded:
+                return 0
+            return int(expanded)
         return int(orig_value)
     t.value = _expanding_value
     return t
