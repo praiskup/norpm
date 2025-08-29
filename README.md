@@ -43,13 +43,13 @@ and greatly encouraged!
 - [x] %bcond* support
 - [x] %dnl
 - [x] %{defined:}
-- [ ] version comparisons, like v"1" < v"1.2"
-- [ ] [functions in expressions](https://github.com/rpm-software-management/rpm/blob/8ae5f1d0db9e3c088d3163cbfc2612990702ff93/rpmio/expression.cc#L556)
+- [x] version comparisons, like v"1" < v"1.2"
 - [ ] %if[n]arch
 - [ ] rpmrc files (these e.g. define %optflags)
 - [ ] %include
 - [ ] %SOURCEN
 - [ ] Requires/BuildRequires parsing
 - [ ] %{gsub:}
+- [ ] [functions in expressions](https://github.com/rpm-software-management/rpm/blob/8ae5f1d0db9e3c088d3163cbfc2612990702ff93/rpmio/expression.cc#L556)
 - [ ] %{lua:} (not safe, must be an opt-in)
 - [ ] %(shell) (not safe, must be an opt-in)

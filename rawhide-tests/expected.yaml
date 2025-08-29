@@ -2,7 +2,6 @@
 lines: 24543
 
 failures:
-  go-vendor-tools.spec: Unexpected error.
   re2.spec: Unexpected error.
 
 errors:
