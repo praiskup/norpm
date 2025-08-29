@@ -6,9 +6,11 @@ import operator
 from ply.lex import lex
 from ply.yacc import yacc
 
+from norpm.versions import rpmevrcmp
+
 
 tokens = [
-    'NUMBER', 'STRING',
+    'VERSION', 'NUMBER', 'STRING',
     'PLUS', 'MINUS', 'TIMES', 'DIVIDE',
     'AND','OR', 'NOT',
     'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
@@ -46,6 +48,18 @@ def t_NUMBER(t):
         if expander:
             return int(expander(orig_value))
         return int(orig_value)
+    t.value = _expanding_value
+    return t
+
+
+def t_VERSION(t):
+    r'v"([^\\\n]|(\\.))*?"'
+    t.value = t.value[2:-1]  # Remove surrounding quotes
+    orig_value = t.value
+    def _expanding_value(expander=None):
+        if expander:
+            return expander(orig_value)
+        return orig_value
     t.value = _expanding_value
     return t
 
@@ -174,6 +188,34 @@ def p_expr_number(p):
 def p_expr_string(p):
     'expr : STRING'
     p[0] = p[1]
+
+
+def p_expr_version(p):
+    """
+    expr : VERSION LT VERSION
+         | VERSION LE VERSION
+         | VERSION GT VERSION
+         | VERSION GE VERSION
+         | VERSION EQ VERSION
+         | VERSION NE VERSION
+    """
+    lhs = p[1]
+    rhs = p[3]
+    op = p[2]
+
+    def _compare_versions(expander=None):
+        result = rpmevrcmp(lhs(expander), rhs(expander))
+
+        if result == 0 and op in ["==", ">=", "<="]:
+            return 1
+        if result == -1 and op in ["<", "<=", "!="]:
+            return 1
+        if result == 1 and op in [">", ">=", "!="]:
+            return 1
+        return 0
+
+    p[0] = _compare_versions
+
 
 def p_expr_not(p):
     'expr : NOT expr'

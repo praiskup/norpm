@@ -96,3 +96,24 @@ def test_expression_expansion():
     assert specfile_expand('%[ 0 ? "a" : "b" ]', MacroRegistry()) == "b"
     assert specfile_expand('%[ 1 + 10 ? 2 : 3 ]', MacroRegistry()) == "2"
     assert specfile_expand('%[!(0%{?rhel} >= 10)]', MacroRegistry()) == "1"
+
+
+def test_expand_version_comparisons():
+    """ Normal expression expansion """
+    assert specfile_expand("""\
+%if v"3.0" < v"5"
+YES
+%endif
+%[ v"1:2.5" > v"3.0" ]
+%[ v"1:2.5" >= v"3.0" ]
+%[ v"0:2.5" == v"2.005" ]
+%[ v"0:2.5" < v"1:2.5" ]
+%[ v"0:2.5" <= v"1:2.5" ]
+""", MacroRegistry()) == """\
+YES
+1
+1
+1
+1
+1
+"""
