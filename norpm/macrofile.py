@@ -155,10 +155,11 @@ def macrofile_split_generator(file_contents, inspec=False):
         yield ctx.macroname, ctx.value.rstrip(), ctx.params
 
 
-def _get_macro_files():
+def _get_macro_files(arch):
     patterns = [
         "/usr/lib/rpm/macros",
         "/usr/lib/rpm/redhat/macros",
+        f"/usr/lib/rpm/platform/{arch}-linux/macros",
         "/usr/lib/rpm/macros.d/macros.*",
         os.path.join(os.path.expanduser("~"), ".rpmmacros"),
     ]
@@ -169,12 +170,15 @@ def _get_macro_files():
     return files
 
 
-def system_macro_registry():
+def system_macro_registry(arch=None):
     """Create and return a new MacroRegistry() object fed with the macros
     defined on the system."""
     registry = MacroRegistry()
 
-    for file in _get_macro_files():
+    if arch:
+        registry.target = arch
+
+    for file in _get_macro_files(arch):
         with open(file, "r", encoding="utf-8") as fd:
             macrofile_parse(fd.read(), registry)
     return registry

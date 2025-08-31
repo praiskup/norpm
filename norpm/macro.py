@@ -3,6 +3,7 @@ RPM macro & macro stack representation
 """
 
 # pylint: disable=too-few-public-methods
+from norpm.arch import detect_host_arch
 
 class MacroDefinition:
     """A single macro definition."""
@@ -53,6 +54,7 @@ class MacroRegistry:
 
     def __init__(self):
         self.db = {}
+        self.target = detect_host_arch()
 
     def known_norpm_hacks(self):
         """

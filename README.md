@@ -44,7 +44,7 @@ and greatly encouraged!
 - [x] %dnl
 - [x] %{defined:}
 - [x] version comparisons, like v"1" < v"1.2"
-- [ ] %if[n]arch
+- [x] %if[n]arch
 - [ ] rpmrc files (these e.g. define %optflags)
 - [ ] %include
 - [ ] %SOURCEN
