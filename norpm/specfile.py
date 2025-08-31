@@ -129,6 +129,7 @@ class _SpecContext:
     in_expr = None
     in_comment = None
     hooks = None
+    target = None
 
     def __init__(self, hooks=None):
         self.condition_stack = []
@@ -580,6 +581,11 @@ def _expand_snippet(context, snippet, definitions, depth=0):
                 except SyntaxError:
                     log.error("Failed to parse 'if' expression: %s", expr)
                     expr = False
+            elif iftype in ["%ifarch", "%ifnarch"]:
+                arches = expr.split()
+                expr = definitions.target in arches
+                if iftype == "%ifnarch":
+                    expr = not expr
             else:
                 expr = True  # todo arch
         else:

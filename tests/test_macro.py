@@ -31,4 +31,5 @@ def test_macro_call_parser():
 def test_known_hacks():
     db = MacroRegistry()
     db.known_norpm_hacks()
+    assert db["goname"].value == "NORPM_HACK_NO_GONAME"
     assert db["optflags"].value == "-O2 -g3"
