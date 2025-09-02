@@ -168,11 +168,12 @@ def parse_macro_call(call):
     """
 
     # pylint: disable=too-many-branches
-
     success = True
 
     if call.startswith("%{"):
         call = call[2:-1]
+    else:
+        call = call[1:]
 
     conditionals = set()
     name = ""
@@ -198,6 +199,9 @@ def parse_macro_call(call):
             if c == '#':
                 name += c
                 continue
+            success = False
+            break
+
         if state == 'NAME':
             if is_macro_character(c):
                 name += c
@@ -217,6 +221,9 @@ def parse_macro_call(call):
                 params = ""
                 continue
 
+            success = False
+            break
+
         if state == 'PARAMS':
             params += c
             continue
@@ -224,5 +231,8 @@ def parse_macro_call(call):
         if state == 'ALT':
             alt += c
             continue
+
+    if not name:
+        success = False
 
     return success, name, conditionals, params, alt
