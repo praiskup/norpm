@@ -117,6 +117,21 @@ def test_expand_parametric_stars():
         == '\nbefore after\nbefore -d d after'
 
 
+def test_expand_parametric_ifdefs():
+    db = MacroRegistry()
+    assert specfile_expand_string(
+        "%define kernel_variant_package(nm:) %{?-m:1}.%{!?-m:1}.%{-m:1}.%{!-m:0}.%{?-n:1}.%{!?-n:1}.%{-n:1}.%{!-n:0}\n"
+        "%kernel_variant_package\n"
+        "%kernel_variant_package -m 10\n"
+        "%kernel_variant_package -n 10\n"
+        "%kernel_variant_package -n 10 -m 11\n", db) == (
+        ".1..0..1..0\n"
+        "1..1...1..0\n"
+        ".1..0.1..1.\n"
+        "1..1..1..1.\n"
+    )
+
+
 @pytest.mark.parametrize("statement", ["%define", "%global"])
 def test_specfile_expand_generator(statement):
     db = MacroRegistry()
