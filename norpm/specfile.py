@@ -619,9 +619,17 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     if not success:
         return snippet
 
+    defined = name in definitions
+
+    if name[0] == '-' and name[1].isalpha():
+        # expanding %{-m} like strings, these have special conditions
+        # like %{-m:params} and %{!-m:params}
+        if params and conditionals.issubset(set(['!'])):
+            print_params = xor(defined, '!' in conditionals)
+            return params if print_params else ""
+
     if '?' in conditionals:
         # params ignored
-        defined = name in definitions
         if '!' in conditionals:
             if not alt:
                 return ""
