@@ -28,28 +28,10 @@ with open("my.spec", "r", encoding="utf8") as fd:
     print("Version:", registry["version"].value)
 ```
 
-TODOs
+State of the implementation
 -----
 
-There are many features still to be implemented. Your contributions are welcome
-and greatly encouraged!
+There still are a [few features][rfes] to be implemented.  Your contributions
+are welcome and greatly encouraged!
 
-- [x] %undefine
-- [x] Parametric macro definitions + calls
-- [x] %if, %else parsing (generic)
-- [x] expression parsing (e.g., for %if)
-- [x] %[expressions]
-- [x] %{expand}
-- [x] %bcond* support
-- [x] %dnl
-- [x] %{defined:}
-- [x] version comparisons, like v"1" < v"1.2"
-- [x] %if[n]arch
-- [ ] rpmrc files (these e.g. define %optflags)
-- [ ] %include
-- [ ] %SOURCEN
-- [ ] Requires/BuildRequires parsing
-- [ ] %{gsub:}
-- [ ] [functions in expressions](https://github.com/rpm-software-management/rpm/blob/8ae5f1d0db9e3c088d3163cbfc2612990702ff93/rpmio/expression.cc#L556)
-- [ ] %{lua:} (not safe, must be an opt-in)
-- [ ] %(shell) (not safe, must be an opt-in)
+[rfes]: https://github.com/praiskup/norpm/issues?q=is%3Aissue%20state%3Aopen%20label%3Aenhancement
