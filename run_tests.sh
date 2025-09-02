@@ -3,7 +3,7 @@
 set -e
 args=()
 
-coverage=( --cov-report term-missing --cov norpm --cov tests )
+coverage=( --cov-report term-missing --cov norpm )
 for arg; do
     case $arg in
     --no-coverage) coverage=() ;;
