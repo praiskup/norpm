@@ -2,6 +2,8 @@
 Built-in macro definitions
 """
 
+import os
+
 from norpm.lua import gsub
 
 
@@ -24,6 +26,17 @@ class _Builtin:
         """evaluate the builtin, return the expanded value"""
         raise NotImplementedError
 
+
+class _BuiltinBasename(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, _db):
+        return os.path.basename(params[0])
+
+
+class _BuiltinDirname(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, _db):
+        return os.path.dirname(params[0])
 
 class _BuiltinDnl(_Builtin):
     expand_params = False
@@ -126,6 +139,8 @@ class _BuiltinUpper(_Builtin):
 
 
 BUILTINS = {
+    "basename": _BuiltinBasename,
+    "dirname": _BuiltinDirname,
     "dnl": _BuiltinDnl,
     "expand": _BuiltinExpand,
     "gsub": _BuiltinGsub,
