@@ -50,3 +50,32 @@ def test_text_subst_builtins():
 13
 15
 """
+
+
+def test_gsub():
+    "test %gsub macro"
+    spec = """\
+%define foo %{quote:hello world. I like you!}
+%define bar %{gsub %foo hello hi}
+%define baz %{gsub %foo %w+ X}
+%bar
+%{gsub %foo o X}
+%{gsub %foo o X 1}
+%{gsub %foo %w X 1}
+%{gsub %foo %w+ X}
+%{len:%baz}
+%{len %baz}
+%{gsub %foo %. !}
+%{gsub %foo . _}
+"""
+    assert specfile_expand_string(spec, MacroRegistry()) == '''\
+hi world. I like you!
+hellX wXrld. I like yXu!
+hellX world. I like you!
+Xello world. I like you!
+X X. X X X!
+11
+1
+hello world! I like you!
+________________________
+'''
