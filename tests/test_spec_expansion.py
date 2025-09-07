@@ -117,6 +117,21 @@ def test_expand_parametric_stars():
         == '\nbefore after\nbefore -d d after'
 
 
+def test_expand_parametric_stars2():
+    db = MacroRegistry()
+    assert specfile_expand_string(
+            """\
+%global xyz x  y z
+%global foobar() before    %*  middle   %**  after%xyz
+%foobar a  b
+%{foobar:a  b}
+%xyz
+""", db) == """\
+before    a b  middle   a b  afterx  y z
+before    a  b  middle   a  b  afterx  y z
+x  y z
+"""
+
 def test_expand_parametric_ifdefs():
     db = MacroRegistry()
     assert specfile_expand_string(
@@ -129,6 +144,19 @@ def test_expand_parametric_ifdefs():
         "1..1...1..0\n"
         ".1..0.1..1.\n"
         "1..1..1..1.\n"
+    )
+
+
+def test_expand_parametric_weird_arg():
+    db = MacroRegistry()
+    assert specfile_expand_string(
+        "%define weird_m(m) %{-m} %{-m arg} %{-m:arg}\n"
+        "%weird_m -m\n"
+        "%weird_m -m  xyz\n"
+        "%weird_m\n", db) == (
+        "-m -m arg\n"
+        "-m -m arg\n"
+        "  \n"
     )
 
 
@@ -400,3 +428,21 @@ def test_not_nested_expr():
 def test_invalid_macros():
     macros = MacroRegistry()
     assert specfile_expand_string("%{...} %?", macros) == "%{...} %?"
+
+
+def test_quote():
+    """
+    Quoted string are not split in params.
+    """
+    macrotext = """\
+%define macro1 %{quote:a b c }
+%define macro2 %{quote:d e f}
+%define macro3 0 1 2
+%define macro4 %macro1%macro2%macro3
+%global macro5() "%1" "%2"
+%macro5 %macro4
+"""
+    macros = MacroRegistry()
+    assert specfile_expand_string(macrotext, macros) == """\
+"a b c d e f0" "1"
+"""
