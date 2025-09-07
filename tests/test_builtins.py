@@ -98,3 +98,29 @@ HELLO
 HELLO   WORLD
 hello   world
 """
+
+
+def test_basename_dirname():
+    """
+    Test %basename and %dirname.
+    """
+    spec = """\
+%{dirname:./ahoj}
+%{dirname:/bc/../ahoj}
+%{dirname:/a/b/c/ahoj.txt}
+%{dirname:/foo.xml}
+%{basename:./ahoj}
+%{basename:/bc/../ahoj}
+%{basename:/a/b/c/ahoj.txt}
+%{basename:/foo.xml}
+"""
+    assert specfile_expand_string(spec, MacroRegistry()) == """\
+.
+/bc/..
+/a/b/c
+/
+ahoj
+ahoj
+ahoj.txt
+foo.xml
+"""
