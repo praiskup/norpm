@@ -71,6 +71,10 @@ class _BuiltinLen(_Builtin):
         return str(len(params[0]))
 
 
+class _BuiltinLower(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, db):
+        return params[0].lower()
 
 
 class _BuiltinQuote(_Builtin):
@@ -114,12 +118,21 @@ class _BuiltinUndefine(_Builtin):
         db.undefine(params[0])
         return ""
 
+class _BuiltinUpper(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, db):
+        return params[0].upper()
+
+
+
 BUILTINS = {
     "dnl": _BuiltinDnl,
     "expand": _BuiltinExpand,
     "gsub": _BuiltinGsub,
     "len": _BuiltinLen,
+    "lower": _BuiltinLower,
     "quote": _BuiltinQuote,
     "sub": _BuiltinSub,
     "undefine": _BuiltinUndefine,
+    "upper": _BuiltinUpper,
 }
