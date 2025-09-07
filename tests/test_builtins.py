@@ -68,6 +68,7 @@ def test_gsub():
 %{gsub %foo %. !}
 %{gsub %foo . _}
 %{gsub 1.2.3 %. %{quote:}}
+%{gsub 0.4.5+gimp3rc1 + -}
 """
     assert specfile_expand_string(spec, MacroRegistry()) == '''\
 hi world. I like you!
@@ -80,6 +81,7 @@ X X. X X X!
 hello world! I like you!
 ________________________
 123
+0.4.5-gimp3rc1
 '''
 
 

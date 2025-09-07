@@ -32,6 +32,10 @@ def lua_to_python_pattern(lua_pattern):
     for lua_char, py_char in mapping.items():
         processed_pattern = processed_pattern.replace(lua_char, py_char)
 
+    if processed_pattern.startswith('+'):
+        # %{gsub %version + -}
+        processed_pattern = '\\+' + processed_pattern[1:]
+
     # Restore escaped percent signs
     return processed_pattern.replace('__PERCENT_SIGN__', '%')
 
