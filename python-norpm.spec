@@ -1,5 +1,5 @@
 Name:           python-norpm
-Version:        1.3
+Version:        1.5
 Release:        1%?dist
 Summary:        RPM Macro Expansion in Python
 
@@ -56,5 +56,5 @@ Summary:        %summary
 
 
 %changelog
-* Mon Aug 11 2025 Pavel Raiskup <praiskup@redhat.com> - 1.3-1
-- Initial packaging
+* Sun Sep 07 2025 Pavel Raiskup <praiskup@redhat.com>
+- no changelog in upstream git
