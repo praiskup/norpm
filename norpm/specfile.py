@@ -932,9 +932,6 @@ def _specfile_expand_string_generator(context, string, macros, depth=0,
             quoted = True
             expanded = str(expanded)
 
-        if expanded == "":
-            continue
-
         if expanded == buffer:
             if context.expanding:
                 yield buffer
