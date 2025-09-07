@@ -79,3 +79,20 @@ X X. X X X!
 hello world! I like you!
 ________________________
 '''
+
+
+def test_upper_lower():
+    """
+    Test %upper and %lower.
+    """
+    spec = """\
+%global text Hello   World
+%{upper %text}
+%{upper:%text}
+%{lower:%text}
+"""
+    assert specfile_expand_string(spec, MacroRegistry()) == """\
+HELLO
+HELLO   WORLD
+hello   world
+"""
