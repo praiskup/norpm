@@ -24,6 +24,7 @@ from norpm.macrofile import macrofile_parse, macrofile_split_generator
 from norpm.getopt import getopt
 from norpm.logging import get_logger
 from norpm.expression import eval_rpm_expr
+from norpm.builtins import BUILTINS, QuotedString
 
 log = get_logger()
 
@@ -50,59 +51,6 @@ SHELL_REGEXP_HACKS = [{
     'method': lambda x: f'%{{sub %{{{x[1]}}} 1 {x[2]}}}',
 }]
 
-
-class _Builtin:
-    expand_params = True
-    @classmethod
-    def eval(cls, snippet, params, db):
-        """evaluate the builtin, return the expanded value"""
-        raise NotImplementedError
-
-
-class _BuiltinUndefine(_Builtin):
-    @classmethod
-    def eval(cls, snippet, params, db):
-        db.undefine(params[0])
-        return ""
-
-
-class _BuiltinDefined(_Builtin):
-    @classmethod
-    def eval(cls, snippet, params, db):
-        return str(int(params[0] in db))
-
-
-class _BuiltinDnl(_Builtin):
-    expand_params = False
-    @classmethod
-    def eval(cls, _snippet, _params, _db):
-        return ""
-
-
-class _BuiltinSub(_Builtin):
-    @classmethod
-    def eval(cls, snippet, params, db):
-        # params: string start stop (indexes)
-        try:
-            string, start, stop = params
-            start = int(start)
-            stop = int(stop)
-        except ValueError:
-            return snippet
-        # start index to python start index
-        if start >= 1:
-            start -= 1
-        if stop < 0:
-            stop += 1
-        return string[start:stop]
-
-
-BUILTINS = {
-    "defined": _BuiltinDefined,
-    "dnl": _BuiltinDnl,
-    "sub": _BuiltinSub,
-    "undefine": _BuiltinUndefine,
-}
 
 class ParseError(Exception):
     """General parsing error"""
@@ -214,12 +162,12 @@ def specfile_split_generator(string, macros):
     Split input string into a macro and non-macro parts.
     """
     context = _SpecContext()
-    for s in _specfile_split_generator(context, string, macros):
+    for s in SpecfileSplitGenerator(context, string, macros):
         yield str(s)
 
 
 @dataclass
-class _Snippet:
+class _ParsingSnippet:
     text: str
     in_comment: bool = False
     macro_starts_line: bool = True
@@ -228,6 +176,22 @@ class _Snippet:
     def startswith(self, start):
         "bypass down to str()"
         return self.text.startswith(start)
+
+
+class SpecfileSplitGenerator:
+    """
+    Method to split strings into list of macro calls and raw string parts.
+    """
+    quoted = False
+
+    def __init__(self, context, string, macros):
+        self.gen = _specfile_split_generator(context, string, macros)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return next(self.gen)
 
 
 def _specfile_split_generator(context, string, macros):
@@ -241,8 +205,8 @@ def _specfile_split_generator(context, string, macros):
     macro_starts_line = False
 
     def _snippet():
-        return _Snippet(buffer, in_comment=context.in_comment,
-                        macro_starts_line=macro_starts_line)
+        return _ParsingSnippet(buffer, in_comment=context.in_comment,
+                               macro_starts_line=macro_starts_line)
 
     buffer = ""
     for c in tokenize(string):
@@ -447,8 +411,10 @@ def _expand_internal(context, depth, internal, params, snippet, db):
     if not context.expanding:
         return ""
     if builtin.expand_params:
-        params = _specfile_expand_string(context, params, db, depth+1)
-    return builtin.eval(snippet, params.split(), db)
+        # TODO drop the two-type hack from parse_macro_call()
+        params = _expand_params(context, params, db, depth+1)
+
+    return builtin.eval(snippet, params, db)
 
 
 def _parse_condition(full_snippet):
@@ -548,8 +514,8 @@ def _expand_snippet(context, snippet, definitions, depth=0):
             try:
                 filtered_output = []
                 hasm = _HideAndSeekMacro(context, definitions, depth)
-                for part in _specfile_split_generator(context, stripped,
-                                                      definitions):
+                for part in SpecfileSplitGenerator(context, stripped,
+                                                   definitions):
                     if not part.startswith("%"):
                         filtered_output.append(str(part))
                         continue
@@ -623,8 +589,8 @@ def _expand_snippet(context, snippet, definitions, depth=0):
 
     if name[0] == '-' and name[1].isalpha():
         # expanding %{-m} like strings, these have special conditions
-        # like %{-m:params} and %{!-m:params}
-        if params and conditionals.issubset(set(['!'])):
+        # like %{-m:params} and %{!-m:params}, but not %{-m xxx}
+        if params and not isinstance(params, list) and conditionals.issubset(set(['!'])):
             print_params = xor(defined, '!' in conditionals)
             return params if print_params else ""
 
@@ -645,13 +611,8 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     if _is_special(name):
         return snippet
 
-    if name == "expand":
-        # expand params (as for every macro call), and then reexpand
-        params = _specfile_expand_string(context, params, definitions, depth+1)
-        return params
-
     if (expanded := _expand_internal(context, depth, name, params, snippet,
-                                     definitions))  is not None:
+                                     definitions)) is not None:
         return expanded
 
     retval = definitions.get_macro_value(name, snippet)
@@ -665,13 +626,13 @@ def _expand_snippet(context, snippet, definitions, depth=0):
         return retval
 
     # RPM also first expands the parameters before calling getopt()
-    params = _specfile_expand_string(context, params, definitions, depth+1)
+    params = _expand_params(context, params, definitions, depth+1)
 
     # TODO: unexpanded '%foo %(shell hack)', do this better
-    if params.startswith('%'):
+    if params and params[0].startswith('%'):
         return retval
 
-    optlist, args = getopt(params.split(), definitions[name].params)
+    optlist, args = getopt(params, definitions[name].params)
 
     # Temporarily define '%1', '%*', '%-f', etc.
     for opt, arg in optlist:
@@ -682,7 +643,7 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     definitions.define("#", str(len(args)), special=True)
     definitions.define("0", name, special=True)
     definitions.define("*", ' '.join(args), special=True)
-    definitions.define("**", params, special=True)
+    definitions.define("**", ' '.join(params), special=True)
 
     retval = _specfile_expand_string(context, retval, definitions, depth+1)
 
@@ -709,6 +670,121 @@ def specfile_expand_string(string, macros, depth=0):
 
 def _specfile_expand_string(context, string, macros, depth):
     return "".join(list(_specfile_expand_string_generator(context, string, macros, depth)))
+
+
+class QuoteStart:
+    """
+    Beginning of %{quote} string.
+    """
+
+
+class QuoteEnd:
+    """
+    End of %{quote} string.
+    """
+
+
+def _specfile_expand_string_quoted(context, string, macros, depth):
+    work_in_progress = []
+    buffer = ""
+    depth = 0
+    for snippet in _specfile_expand_string_generator(context, string, macros,
+                                                     depth, handle_quotes=True):
+
+        if isinstance(snippet, QuoteStart):
+            if depth == 0:
+                if buffer:
+                    work_in_progress.append(buffer)
+                buffer = ""
+            depth += 1
+            continue
+        if isinstance(snippet, QuoteEnd):
+            depth -= 1
+            if depth == 0:
+                work_in_progress.append(QuotedString(buffer))
+                buffer = ""
+            continue
+        buffer += snippet
+    if buffer:
+        work_in_progress.append(buffer)
+
+    # join quotes so there's at most one quote in a row (optimize)
+    optimized = []
+    for part in work_in_progress:
+        if isinstance(part, QuotedString):
+            if optimized and isinstance(optimized[-1], QuotedString):
+                previous = optimized.pop()
+                optimized.append(QuotedString(str(previous) + str(part)))
+            else:
+                optimized.append(part)
+        else:
+            optimized.append(part)
+
+    # Split strings (without quote) and glue first/last items to the
+    # quoted strings if appropriate.
+    # ["x", %{quote: foo }, "x bar"] => ["x foo x", "bar"]
+
+    output = []
+    trailing = ""
+
+    def _last():
+        if not output:
+            return None
+        return output[-1]
+
+    for part in optimized:
+        if isinstance(part, QuotedString):
+            part.string = trailing + part.string
+            output.append(part)
+            trailing = ""
+            continue
+
+        if not part:
+            continue
+
+        # "foo" => ["XfooX"]
+        # "foo bar" => ["Xfoo", "barX"]
+        # " foo bar " => ["X", "foo", "bar", "X"]
+        part_wrap = 'X' + part + 'X'
+        part_split = part_wrap.split()
+        if len(part_split) == 1:
+            last = _last()
+            if isinstance(last, QuotedString):
+                last.string = last.string + part
+            else:
+                trailing = part
+            continue
+
+        first = part_split.pop(0)
+        if first != "X":
+            last = _last()
+            if isinstance(last, QuotedString):
+                last.string += first[1:]
+            else:
+                output.append(first[1:])
+
+        last = part_split.pop()
+        if last != "X":
+            trailing = last[:-1]
+
+        output.extend(part_split)
+
+    if trailing:
+        output.append(trailing)
+
+    output = [str(x) for x in output]
+    return output
+
+
+def _expand_params(context, params, macros, depth):
+    """
+    Expand macro argument(s).  The parse_macro_call() returns either list of
+    strings, or string.  We need to expand differently depending on the type.
+    """
+    if isinstance(params, list):
+        params = params[0]
+        return _specfile_expand_string_quoted(context, params, macros, depth+1)
+    return [_specfile_expand_string(context, params, macros, depth+1)]
 
 
 def _define_tags_as_macros(context, line, macros):
@@ -810,8 +886,10 @@ def specfile_expand_string_generator(string, macros, depth=0):
     return _specfile_expand_string_generator(context, string, macros, depth)
 
 
-def _specfile_expand_string_generator(context, string, macros, depth=0):
-    string_generator = _specfile_split_generator(context, string, macros)
+
+def _specfile_expand_string_generator(context, string, macros, depth=0,
+                                      handle_quotes=False):
+    string_generator = SpecfileSplitGenerator(context, string, macros)
     todo = [(depth, string_generator)]
 
     while todo:
@@ -821,6 +899,8 @@ def _specfile_expand_string_generator(context, string, macros, depth=0):
             buffer = str(snippet)
         except StopIteration:
             todo.pop()
+            if handle_quotes and generator.quoted:
+                yield QuoteEnd()
             continue
 
         if buffer == "":
@@ -841,8 +921,16 @@ def _specfile_expand_string_generator(context, string, macros, depth=0):
                 macros[name] = (body, params)
             continue
 
+        quoted = False
         expanded = _expand_snippet(context, snippet, macros, depth)
-        if expanded is None or expanded == "":
+        if expanded is None:
+            continue
+
+        if isinstance(expanded, QuotedString):
+            quoted = True
+            expanded = str(expanded)
+
+        if expanded == "":
             continue
 
         if expanded == buffer:
@@ -853,5 +941,8 @@ def _specfile_expand_string_generator(context, string, macros, depth=0):
         if depth >= 1000:
             raise RecursionError(f"Macro {buffer} causes recursion loop")
 
-        new_generator = _specfile_split_generator(context, expanded, macros)
+        new_generator = SpecfileSplitGenerator(context, expanded, macros)
+        if handle_quotes and quoted:
+            yield QuoteStart()
+            new_generator.quoted = True
         todo.append((depth+1, new_generator))

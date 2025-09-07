@@ -179,6 +179,7 @@ def parse_macro_call(call):
     name = ""
     params = None
     alt = None
+    single_param = False
 
     state = 'COND'
     for c in call:
@@ -214,6 +215,7 @@ def parse_macro_call(call):
                     continue
                 params = ""
                 state = 'PARAMS'
+                single_param = True
                 continue
 
             if c.isspace():
@@ -234,5 +236,13 @@ def parse_macro_call(call):
 
     if not name:
         success = False
+
+    # Handle '%{foo:single_param}' vs '%{foo multi param}', this mapping is
+    # later handled by _expand_params().
+    if not single_param:
+        if params is None:
+            params = []
+        else:
+            params = [params]
 
     return success, name, conditionals, params, alt

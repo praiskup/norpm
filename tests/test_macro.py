@@ -15,17 +15,17 @@ class TestMacroCornerCases(unittest.TestCase):
 
 
 def test_macro_call_parser():
-    assert pc("%{foo}") == (True, "foo", set(), None, None)
-    assert pc("%{?foo}") == (True, "foo", {'?'}, None, None)
-    assert pc("%{!foo}") == (True, "foo", {'!'}, None, None)
-    assert pc("%{ !foo}") == (False, "", set(), None, None)
-    assert pc("%{foo :}") == (True, "foo", set(), ':', None)
-    assert pc("%{?foo :}") == (True, "foo", {'?'}, ':', None)
+    assert pc("%{foo}") == (True, "foo", set(), [], None)
+    assert pc("%{?foo}") == (True, "foo", {'?'}, [], None)
+    assert pc("%{!foo}") == (True, "foo", {'!'}, [], None)
+    assert pc("%{ !foo}") == (False, "", set(), [], None)
+    assert pc("%{foo :}") == (True, "foo", set(), [':'], None)
+    assert pc("%{?foo :}") == (True, "foo", {'?'}, [':'], None)
     assert pc("%{foo:param}") == (True, "foo", set(), 'param', None)
-    assert pc("%{?foo:alt }") == (True, "foo", {'?'}, None, 'alt ')
-    assert pc("%{?!foo: alt }") == (True, "foo", {'?', '!'}, None, ' alt ')
+    assert pc("%{?foo:alt }") == (True, "foo", {'?'}, [], 'alt ')
+    assert pc("%{?!foo: alt }") == (True, "foo", {'?', '!'}, [], ' alt ')
     assert pc("%{!foo: param }") == (True, "foo", {'!'}, ' param ', None)
-    assert pc("%{?!bar}") == (True, "bar", {'?', '!'}, None, None)
+    assert pc("%{?!bar}") == (True, "bar", {'?', '!'}, [], None)
 
 
 def test_known_hacks():
