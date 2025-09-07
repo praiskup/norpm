@@ -11,8 +11,8 @@ How to Use It
 -------------
 
 ```bash
-$ norpm-expand-specfile --specfile SPEC --expand-string '%version %{!?epoch:(none)}'
-1.1.1 (none)
+$ norpm-expand-specfile --specfile SPEC --expand-string '%{?epoch}%{!?epoch:(none)}:%version'
+(none):1.1.1
 ```
 
 Directly from Python, you can use:
@@ -21,8 +21,7 @@ Directly from Python, you can use:
 from norpm.macrofile import system_macro_registry
 from norpm.specfile import specfile_expand
 registry = system_macro_registry()
-registry["dist"] = ""
-with open("my.spec", "r", encoding="utf8") as fd:
+with open("SPEC", "r", encoding="utf8") as fd:
     expanded_specfile = specfile_expand(fd.read(), registry)
     print("Name:", registry["name"].value)
     print("Version:", registry["version"].value)
