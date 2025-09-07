@@ -56,9 +56,6 @@ errors:
   google-noto-fonts.spec:
     version: "%{lua: print(string.format(\"%04d%02d%02d\", tonumber(rpm.expand(\"%{majorver}\")), tonumber(rpm.expand(\"%{minorver}\")), tonumber(rpm.expand(\"%{patchver}\"))))}"
     epoch: "(none)"
-  gp2c.spec:
-    version: "%{gsub %{upver} pl .}"
-    epoch: "(none)"
   hut.spec:
     version: "%{lua:"
     epoch: "(none)"

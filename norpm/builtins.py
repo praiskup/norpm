@@ -2,6 +2,9 @@
 Built-in macro definitions
 """
 
+from norpm.lua import gsub
+
+
 class QuotedString:
     """
     String that wouldn't be split if used as a macro parameter.  Example:
@@ -85,20 +88,35 @@ class _BuiltinQuote(_Builtin):
         """
         return QuotedString(params[0])
 
+
 class _BuiltinExpand(_Builtin):
     @classmethod
     def eval(cls, snippet, params, db):
         """
-        Calculates the length of an expanded macro.
+        Implement lua.gsub() as a macro.
         """
         return params[0]
 
 
+class _BuiltinGsub(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, db):
+        count = 0
+        try:
+            string = params[0]
+            pattern = params[1]
+            repl = params[2]
+            count = int(params[3])
+        except (IndexError, ValueError):
+            pass
+        return gsub(string, pattern, repl, count)
+
 BUILTINS = {
     "dnl": _BuiltinDnl,
+    "expand": _BuiltinExpand,
+    "gsub": _BuiltinGsub,
     "len": _BuiltinLen,
+    "quote": _BuiltinQuote,
     "sub": _BuiltinSub,
     "undefine": _BuiltinUndefine,
-    "quote": _BuiltinQuote,
-    "expand": _BuiltinExpand,
 }

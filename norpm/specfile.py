@@ -688,6 +688,7 @@ def _specfile_expand_string_quoted(context, string, macros, depth):
     work_in_progress = []
     buffer = ""
     depth = 0
+
     for snippet in _specfile_expand_string_generator(context, string, macros,
                                                      depth, handle_quotes=True):
 
@@ -705,6 +706,7 @@ def _specfile_expand_string_quoted(context, string, macros, depth):
                 buffer = ""
             continue
         buffer += snippet
+
     if buffer:
         work_in_progress.append(buffer)
 
