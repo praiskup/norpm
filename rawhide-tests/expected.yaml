@@ -1,5 +1,5 @@
 ---
-lines: 24543
+lines: 23976
 
 failures: {}
 
@@ -17,9 +17,6 @@ errors:
   cachelib.spec:
     epoch: '(none)'
     version: "17^%(echo %{tag} | sed -e 's|.00$||' | sed -e 's|.||g')"
-  checkpointctl.spec:
-    version: "%(b=%{built_tag_strip}; echo ${b/-/\"~\"})"
-    epoch: "1"
   cxsc.spec:
     version: "%(tr - . <<< %{upstreamver})"
     epoch: "(none)"
@@ -88,9 +85,6 @@ errors:
     epoch: "(none)"
   netmask.spec:
     version: "%{lua:"
-    epoch: "(none)"
-  oci-seccomp-bpf-hook.spec:
-    version: "%(b=%{built_tag_strip}; echo ${b/-/\"~\"})"
     epoch: "(none)"
   ongres-scram.spec:
     version: "%(echo %{upstream_version} | sed 's/-/~/g')"
@@ -163,7 +157,7 @@ errors:
     epoch: "(none)"
   petsc.spec:
     reason: "uses %global epoch 0, but doesn't set Epoch"
-    version: "3.23.3"
+    version: "3.23.6"
     epoch: "0"
   pgn-extract.spec:
     version: "%(echo %{srcversion} | tr - .)"
@@ -177,15 +171,12 @@ errors:
   python-beartype.spec:
     version: "%{lua:"
     epoch: "(none)"
-  python-curio.spec:
-    version: "1.6^1.%{lua:print(macros.commit:sub(1,7))}"
-    epoch: "(none)"
   python-medimages4tests.spec:
     version: "%{lua:"
     epoch: "(none)"
   re2.spec:
     version: "%(echo '%{tag}' | tr -d -)"
-    epoch: "1"
+    epoch: "2"
   ruby.spec:
     version: "3.4.4~%(stat --printf='@%Y' %{_sourcedir}/%{ruby_archive}.tar.xz | date -f - +\"%Y%m%d\")preview2"
     epoch: "(none)"
