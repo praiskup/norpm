@@ -16,6 +16,7 @@ test = ["pytest"]
 
 [project.scripts]
 norpm-expand-specfile = "norpm.cli.expand_specfile:_main"
+norpm-conditions-for-arch-statements = "norpm.cli.conditions_for_arch_statements:_main"
 
 [project.urls]
 Homepage = "https://github.com/praiskup/norpm"

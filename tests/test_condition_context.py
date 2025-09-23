@@ -8,9 +8,9 @@ from norpm.specfile import _SpecContext, ParseError
 
 def test_basic_context():
     context = _SpecContext()
-    context.condition(True)      # if 1
+    context.condition(True, '1') # if 1
     assert context.expanding
-    context.condition(False)     # if 0
+    context.condition(False, '0')# if 0
     assert not context.expanding
     context.negate_condition()   # else
     assert context.expanding
@@ -24,7 +24,7 @@ def test_basic_context():
 
 def test_double_else():
     context = _SpecContext()
-    context.condition(True)         # if 1
+    context.condition(True, " 1")   # if 1
     context.negate_condition()      # else
     with pytest.raises(ParseError):
         context.negate_condition()  # else

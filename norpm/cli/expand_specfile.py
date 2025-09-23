@@ -14,7 +14,7 @@ class Hooks(ParserHooks):
     def __init__(self):
         self.tags = {}
     def tag_found(self, name, value, _tag_raw):
-        """ Gather EclusiveArch, ExcludeArch and BuildArch """
+        """ Gather EclusiveArch, ExcludeArch, BuildArch... """
         if name == "source":
             name = "source0"
         self.tags[name] = value

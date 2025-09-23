@@ -35,8 +35,13 @@ class ParserHooks:
     """
     Inherit from this method, and override mehtods you find useful.
     """
+    sniff_mode = False
     def tag_found(self, name, value, tag_raw):
         """Called when tag is found, e.g., ExclusiveArch"""
+
+    def tag_conditions(self, name, condition_strings):
+        """Called when tag is found, brings out a list of condition strings
+        evaluated."""
 
 
 SHELL_REGEXP_HACKS = [{
@@ -78,6 +83,7 @@ class _SpecContext:
     in_comment = None
     hooks = None
     target = None
+    calls = None
 
     def __init__(self, hooks=None):
         self.condition_stack = []
@@ -86,16 +92,18 @@ class _SpecContext:
     @property
     def expanding(self):
         """Return True if we are expanding."""
-        for cond, flipped in self.condition_stack:
+        if self.hooks.sniff_mode:
+            return True
+        for cond, flipped, _ in self.condition_stack:
             if not xor(cond, flipped):
                 return False
         return True
 
-    def condition(self, expanding):
+    def condition(self, expanding, raw_expr):
         """Nest into the stack of conditions."""
         if self.in_comment:
             return
-        self.condition_stack.append((expanding, False))
+        self.condition_stack.append((expanding, False, raw_expr))
 
     def close_condition(self):
         """Emerge from one condition level."""
@@ -110,10 +118,10 @@ class _SpecContext:
         """Revert last ondition upon %else."""
         if self.in_comment:
             return
-        cond, flipped = self.condition_stack[-1]
+        cond, flipped, raw_expr = self.condition_stack[-1]
         if flipped:
             raise ParseError("Double %else")
-        self.condition_stack[-1] = (cond, True)
+        self.condition_stack[-1] = (cond, True, raw_expr)
 
 
 def specfile_split(file_contents, macros):
@@ -536,6 +544,7 @@ def _expand_snippet(context, snippet, definitions, depth=0):
         iftype, expr = cond
         # expand the expression content first
         log.debug("Expression: %s", expr)
+        raw_expr = expr
 
         if context.expanding:
             context.in_expr = True
@@ -557,7 +566,7 @@ def _expand_snippet(context, snippet, definitions, depth=0):
         else:
             expr = False
 
-        context.condition(expr)
+        context.condition(expr, raw_expr)
         return None
 
     cond_attempt = snippet.split()
@@ -584,6 +593,9 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     success, name, conditionals, params, alt = parse_macro_call(snippet)
     if not success:
         return snippet
+
+    if context.calls is not None:
+        context.calls.add(name)
 
     defined = name in definitions
 
@@ -798,6 +810,8 @@ def _define_tags_as_macros(context, line, macros):
     tag = tag_raw.strip().lower()
     value = definition.strip()
     context.hooks.tag_found(tag, value, tag_raw)
+    conditions = [c[2] for c in context.condition_stack]
+    context.hooks.tag_conditions(tag, conditions)
     if tag in [
         "name",
         "release",
@@ -945,3 +959,13 @@ def _specfile_expand_string_generator(context, string, macros, depth=0,
             yield QuoteStart()
             new_generator.quoted = True
         todo.append((depth+1, new_generator))
+
+
+def specfile_detect_macro_calls_in_string(string, macros):
+    """
+    Return a set of macro names expanded during string expansion.
+    """
+    context = _SpecContext()
+    context.calls = set()
+    _specfile_expand_string(context, string, macros, 0)
+    return context.calls
