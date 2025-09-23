@@ -3,6 +3,7 @@
 [MASTER]
 # Pickle collected data for later comparisons.
 persistent=no
+min-similarity-lines=4
 
 init-hook=
     import os

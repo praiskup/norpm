@@ -52,6 +52,7 @@ Summary:        %summary
 
 %files -n python3-norpm -f %pyproject_files
 %doc README.md
+%_bindir/norpm-conditions-for-arch-statements
 %_bindir/norpm-expand-specfile
 
 
