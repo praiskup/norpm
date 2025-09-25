@@ -157,10 +157,12 @@ def macrofile_split_generator(file_contents, inspec=False):
 
 def _get_macro_files(arch):
     patterns = [
+        "/usr/lib/rpm/macros.d/macros.*",
         "/usr/lib/rpm/macros",
         "/usr/lib/rpm/redhat/macros",
         f"/usr/lib/rpm/platform/{arch}-linux/macros",
-        "/usr/lib/rpm/macros.d/macros.*",
+        "/etc/rpm/macros.*",
+        "/etc/rpm/macros",
         os.path.join(os.path.expanduser("~"), ".rpmmacros"),
     ]
     files = []
