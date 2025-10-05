@@ -13,8 +13,8 @@ class MacroDefinition:
         self.params = params
 
     def to_dict(self):
-        """Get a serializable object, used for testing."""
-        if self.params:
+        """Get a serializable object."""
+        if self.params is not None:
             return (self.value, self.params)
         return (self.value,)
 
@@ -32,6 +32,10 @@ class Macro:
     def to_dict(self):
         """Return the last definition of macro as serializable object."""
         return self.stack[-1].to_dict()
+
+    def dump_def(self):
+        """Return serializable definition of the macro."""
+        return [{"def": x.value, "params": x.params} for x in self.stack]
 
     @property
     def value(self):

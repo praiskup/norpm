@@ -1,6 +1,6 @@
-#! /bin/sh
+#! /bin/bash
 
-# Execute scripts directly from command-line.
+# Execute norpm scripts directly from the gitroot dir.
 
 base=$(basename "$0")
 base=${base//norpm-/}
@@ -10,9 +10,8 @@ file="norpm/cli/$base.py"
 
 die() { echo >&2 "fatal: $*"; exit 1; }
 
-cd "$(dirname "$(readlink -f "$0")")"
+path=$(dirname "$(readlink -f "$0")")
 
-test -e "$file" || die "$file not found"
+test -e "$path/$file" || die "$file not found"
 
-exec python3 -c "import norpm.cli.$base; import sys; sys.argv[0] = '$0'; norpm.cli.$base._main()" "$@"
-
+exec python3 -c "import sys; sys.path.append(\"$path\"); import norpm.cli.$base; sys.argv[0] = '$0'; norpm.cli.$base._main()" "$@"
