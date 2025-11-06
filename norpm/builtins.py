@@ -5,6 +5,7 @@ Built-in macro definitions
 import os
 
 from norpm.lua import gsub
+from norpm.expression import eval_rpm_expr
 
 
 class QuotedString:
@@ -52,6 +53,15 @@ class _BuiltinExpand(_Builtin):
         Implement lua.gsub() as a macro.
         """
         return params[0]
+
+
+class _BuiltinExpr(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, db):
+        """
+        %{expr: 1 + 1}
+        """
+        return str(eval_rpm_expr(params[0]))
 
 
 class _BuiltinGsub(_Builtin):
@@ -143,6 +153,7 @@ BUILTINS = {
     "dirname": _BuiltinDirname,
     "dnl": _BuiltinDnl,
     "expand": _BuiltinExpand,
+    "expr": _BuiltinExpr,
     "gsub": _BuiltinGsub,
     "len": _BuiltinLen,
     "lower": _BuiltinLower,
