@@ -85,6 +85,21 @@ ________________________
 '''
 
 
+def test_reverse():
+    """Test %reverse"""
+
+    spec = """\
+%global text Hello World
+%global reversed %{reverse %text}
+%{reverse:%text}
+%{reversed}
+"""
+    assert specfile_expand_string(spec, MacroRegistry()) == """\
+dlroW olleH
+olleH
+"""
+
+
 def test_upper_lower():
     """
     Test %upper and %lower.
