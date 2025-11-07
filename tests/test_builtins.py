@@ -117,6 +117,24 @@ hello   world
 """
 
 
+def test_shrink():
+    """
+    Test %shrink macro
+    https://rpm.org/docs/4.20.x/manual/macros
+    """
+
+    spec = """\
+=%{shrink:  some    spaces  }=
+=%{shrink: 	 some	 	tabs with   	spaces  }=
+=%{shrink:just     one}=
+"""
+    assert specfile_expand_string(spec, MacroRegistry()) == """\
+=some spaces=
+=some tabs with spaces=
+=just one=
+"""
+
+
 def test_basename_dirname():
     """
     Test %basename and %dirname.
