@@ -147,6 +147,15 @@ class _BuiltinSub(_Builtin):
         return string[start:stop]
 
 
+class _BuiltinSuffix(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, db):
+        try:
+            return params[0].rsplit(".", maxsplit=1)[1]
+        except IndexError:
+            return ""
+
+
 class _BuiltinUndefine(_Builtin):
     @classmethod
     def eval(cls, snippet, params, db):
@@ -172,6 +181,7 @@ BUILTINS = {
     "quote": _BuiltinQuote,
     "reverse": _BuiltinReverse,
     "sub": _BuiltinSub,
+    "suffix": _BuiltinSuffix,
     "undefine": _BuiltinUndefine,
     "upper": _BuiltinUpper,
 }

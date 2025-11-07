@@ -141,3 +141,23 @@ ahoj
 ahoj.txt
 foo.xml
 """
+
+
+def test_suffix():
+    """
+    Test %suffix
+    """
+    spec = """\
+%{suffix: ./a.b }x
+%{suffix:./asdfa/sadfd/c.txt}
+%{suffix:ahoj}
+%{suffix:ahoj.txt}
+%{suffix:ahoj.t/x/t}
+"""
+    assert specfile_expand_string(spec, MacroRegistry()) == """\
+b x
+txt
+
+txt
+t/x/t
+"""
