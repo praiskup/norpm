@@ -129,6 +129,12 @@ class _BuiltinReverse(_Builtin):
         return params[0][::-1]
 
 
+class _BuiltinShrink(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, db):
+        return " ".join(params[0].split())
+
+
 class _BuiltinSub(_Builtin):
     @classmethod
     def eval(cls, snippet, params, db):
@@ -172,6 +178,7 @@ BUILTINS = {
     "quote": _BuiltinQuote,
     "reverse": _BuiltinReverse,
     "sub": _BuiltinSub,
+    "shrink": _BuiltinShrink,
     "undefine": _BuiltinUndefine,
     "upper": _BuiltinUpper,
 }
