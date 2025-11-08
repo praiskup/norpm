@@ -161,6 +161,21 @@ foo.xml
 """
 
 
+def test_rep():
+    """
+    Test %rep
+    """
+    spec = """\
+%{rep x 5}%{rep asdfsafdasdfa 0}
+%global foo 2
+%{rep %{quote:a b } 2}=
+"""
+    assert specfile_expand_string(spec, MacroRegistry()) == """\
+xxxxx
+a b a b =
+"""
+
+
 def test_suffix():
     """
     Test %suffix
