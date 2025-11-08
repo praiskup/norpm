@@ -116,6 +116,19 @@ class _BuiltinQuote(_Builtin):
         return QuotedString(params[0])
 
 
+class _BuiltinRep(_Builtin):
+    """
+    %{rep: %{quote: foo} 3} => ' foo foo foo'
+    """
+
+    @classmethod
+    def eval(cls, snippet, params, db):
+        """
+        Calculates the length of an expanded macro.
+        """
+        return ''.join(params[0] for _ in range(int(params[1])))
+
+
 class _BuiltinReverse(_Builtin):
     """
     %reverse foo => oof
@@ -185,6 +198,7 @@ BUILTINS = {
     "len": _BuiltinLen,
     "lower": _BuiltinLower,
     "quote": _BuiltinQuote,
+    "rep": _BuiltinRep,
     "reverse": _BuiltinReverse,
     "shrink": _BuiltinShrink,
     "sub": _BuiltinSub,
