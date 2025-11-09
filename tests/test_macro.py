@@ -4,13 +4,14 @@ Special tests for macro.py
 
 import unittest
 from norpm.macro import MacroRegistry, parse_macro_call as pc
+from norpm.exceptions import NorpmInvalidMacroName
 
 # pylint: disable=missing-docstring
 
 class TestMacroCornerCases(unittest.TestCase):
     def test_invalid_name(self):
         db = MacroRegistry()
-        with self.assertRaises(KeyError):
+        with self.assertRaises(NorpmInvalidMacroName):
             db["100ab"] = "10"
 
 

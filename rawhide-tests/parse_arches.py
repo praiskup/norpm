@@ -16,6 +16,7 @@ import sys
 from norpm.specfile import specfile_expand
 from norpm.macro import MacroRegistry
 from norpm.macrofile import system_macro_registry
+from norpm.exceptions import NorpmError
 
 db = MacroRegistry()
 db = system_macro_registry()
@@ -102,8 +103,8 @@ def _main():
                 except Exception as exc:  # pylint: disable=broad-exception-caught
                     output[basename]["expansion_error"] = str(exc)
                     continue
-        except RecursionError:
-            print(f"{basename}: RecursionError", flush=True)
+        except NorpmError as err:
+            print(f"{basename}: {err}", flush=True)
 
     _dump_file("/arch-data.json", output)
 

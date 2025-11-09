@@ -7,6 +7,7 @@ from ply.lex import lex
 from ply.yacc import yacc
 
 from norpm.versions import rpmevrcmp
+from norpm.exceptions import NorpmSyntaxError
 
 
 tokens = [
@@ -83,12 +84,12 @@ def t_STRING(t):
 
 def t_error(t):
     "lexer error"
-    raise SyntaxError(f"Illegal character '{t.value[0]}'")
+    raise NorpmSyntaxError(f"Illegal character '{t.value[0]}'")
 
 
 def p_error(p):
     "parser error"
-    raise SyntaxError(f"Syntax error at '{p.value}'")
+    raise NorpmSyntaxError(f"Syntax error at '{p.value}'")
 
 
 lexer = lex()

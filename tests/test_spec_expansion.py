@@ -12,6 +12,7 @@ from norpm.specfile import (
     specfile_expand_generator,
 )
 from norpm.macro import MacroRegistry
+from norpm.exceptions import NorpmRecursionError
 
 
 def _assert_expand_strings(inputs, outputs):
@@ -289,7 +290,7 @@ def test_recursion_limit():
     correct_exception = False
     try:
         specfile_expand_string("%foo", db)
-    except RecursionError:
+    except NorpmRecursionError:
         correct_exception = True
     assert correct_exception
 

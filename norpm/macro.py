@@ -4,6 +4,7 @@ RPM macro & macro stack representation
 
 # pylint: disable=too-few-public-methods
 from norpm.arch import detect_host_arch
+from norpm.exceptions import NorpmInvalidMacroName
 
 class MacroDefinition:
     """A single macro definition."""
@@ -83,7 +84,7 @@ class MacroRegistry:
         params = None
 
         if not special and not is_macro_name(name):
-            raise KeyError(f"{name} is not a valid macro name")
+            raise NorpmInvalidMacroName(f"{name} is not a valid macro name")
 
         if isinstance(value, tuple):
             value, params = value

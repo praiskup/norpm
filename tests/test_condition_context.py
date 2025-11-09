@@ -3,7 +3,8 @@ Test %if %else context.
 """
 
 import pytest
-from norpm.specfile import _SpecContext, ParseError
+from norpm.specfile import _SpecContext
+from norpm.exceptions import NorpmSyntaxError
 
 
 def test_basic_context():
@@ -26,5 +27,5 @@ def test_double_else():
     context = _SpecContext()
     context.condition(True, " 1")   # if 1
     context.negate_condition()      # else
-    with pytest.raises(ParseError):
+    with pytest.raises(NorpmSyntaxError):
         context.negate_condition()  # else

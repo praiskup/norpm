@@ -9,6 +9,7 @@ import glob
 import json
 import os
 import sys
+from norpm.exceptions import NorpmSyntaxError, NorpmRecursionError
 from norpm.macrofile import system_macro_registry
 from norpm.specfile import (
     specfile_expand,
@@ -73,9 +74,9 @@ def macro_names_needed(specfile, original_registry):
     with open(specfile, "r", encoding="utf8") as fd:
         try:
             specfile_expand(fd.read(), registry, hooks)
-        except RecursionError:
+        except NorpmRecursionError:
             sys.stderr.write("Recursion Error.\n")
-        except SyntaxError:
+        except NorpmSyntaxError:
             sys.stderr.write("Syntax Error.\n")
         except AttributeError:
             sys.stderr.write("Attribute Error.\n")
