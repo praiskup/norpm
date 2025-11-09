@@ -155,10 +155,6 @@ errors:
   perl-XML-LibXSLT.spec:
     version: "%(echo '%{cpan_version}' | sed 's/(....)(.)/1.2/')"
     epoch: "(none)"
-  petsc.spec:
-    reason: "uses %global epoch 0, but doesn't set Epoch"
-    version: "3.23.6"
-    epoch: "0"
   pgn-extract.spec:
     version: "%(echo %{srcversion} | tr - .)"
     epoch: "(none)"
