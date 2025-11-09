@@ -24,6 +24,7 @@ from norpm.macrofile import macrofile_parse, macrofile_split_generator
 from norpm.getopt import getopt
 from norpm.logging import get_logger
 from norpm.expression import eval_rpm_expr
+from norpm.exceptions import NorpmSyntaxError, NorpmRecursionError
 from norpm.builtins import BUILTINS, QuotedString
 
 log = get_logger()
@@ -55,10 +56,6 @@ SHELL_REGEXP_HACKS = [{
                          r'cut\s*-[cb]\s*[0-9]?-([0-9]*)'),
     'method': lambda x: f'%{{sub %{{{x[1]}}} 1 {x[2]}}}',
 }]
-
-
-class ParseError(Exception):
-    """General parsing error"""
 
 
 class _SpecContext:
@@ -120,7 +117,7 @@ class _SpecContext:
             return
         cond, flipped, raw_expr = self.condition_stack[-1]
         if flipped:
-            raise ParseError("Double %else")
+            raise NorpmSyntaxError("Double %else")
         self.condition_stack[-1] = (cond, True, raw_expr)
 
 
@@ -438,13 +435,13 @@ def _parse_condition(full_snippet):
             break
 
     if snippet == keyword:
-        raise ParseError(f"{keyword} without expression")
+        raise NorpmSyntaxError(f"{keyword} without expression")
 
     if terminator == 0:
         return None
 
     if snippet[terminator] in ["\r", "\n"]:
-        raise ParseError(f"{snippet[:terminator]} without expression")
+        raise NorpmSyntaxError(f"{snippet[:terminator]} without expression")
 
     if not full_snippet.macro_starts_line:
         return None
@@ -452,7 +449,7 @@ def _parse_condition(full_snippet):
     if snippet[terminator].isspace():
         items = snippet.split(maxsplit=1)
         if len(items) <= 1:
-            raise ParseError("%if without expression")
+            raise NorpmSyntaxError("%if without expression")
         return (keyword, snippet[terminator:])
 
     if snippet[terminator] == "%":
@@ -533,13 +530,13 @@ def _expand_snippet(context, snippet, definitions, depth=0):
                     return str(eval_rpm_expr(parsable, hasm))
                 except ValueError:
                     return str(full_snippet)
-            except SyntaxError:
+            except NorpmSyntaxError:
                 return snippet
         return ""
 
     if cond := _parse_condition(full_snippet):
         if context.in_expr:
-            raise ParseError("%if %if")
+            raise NorpmSyntaxError("%if %if")
 
         iftype, expr = cond
         # expand the expression content first
@@ -553,7 +550,7 @@ def _expand_snippet(context, snippet, definitions, depth=0):
             if iftype == "%if":
                 try:
                     expr = _eval_expression(expr)
-                except SyntaxError:
+                except NorpmSyntaxError:
                     log.error("Failed to parse 'if' expression: %s", expr)
                     expr = False
             elif iftype in ["%ifarch", "%ifnarch"]:
@@ -952,7 +949,7 @@ def _specfile_expand_string_generator(context, string, macros, depth=0,
             continue
 
         if depth >= 1000:
-            raise RecursionError(f"Macro {buffer} causes recursion loop")
+            raise NorpmRecursionError(f"Macro {buffer} causes recursion loop")
 
         new_generator = SpecfileSplitGenerator(context, expanded, macros)
         if handle_quotes and quoted:

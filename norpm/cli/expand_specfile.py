@@ -7,6 +7,7 @@ import sys
 from norpm.macrofile import system_macro_registry
 from norpm.specfile import specfile_expand, specfile_expand_string
 from norpm.specfile import ParserHooks
+from norpm.exceptions import NorpmError
 
 
 class Hooks(ParserHooks):
@@ -58,7 +59,7 @@ def _main():
                 return 1
         sys.stdout.write(expanded_specfile)
         return 0
-    except RecursionError as exc:
+    except NorpmError as exc:
         sys.stderr.write(str(exc))
     return 1
 

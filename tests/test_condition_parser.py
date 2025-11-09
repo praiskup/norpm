@@ -1,6 +1,7 @@
 import pytest
-from norpm.specfile import specfile_expand, ParseError
+from norpm.specfile import specfile_expand
 from norpm.macro import MacroRegistry
+from norpm.exceptions import NorpmSyntaxError
 
 
 def test_if_else():
@@ -43,7 +44,7 @@ def test_if_else3():
 
 
 def test_if_nested():
-    with pytest.raises(ParseError):
+    with pytest.raises(NorpmSyntaxError):
         specfile_expand("""\
 %if %if 0
 what happens

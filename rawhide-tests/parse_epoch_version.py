@@ -13,6 +13,7 @@ from norpm.specfile import specfile_expand
 from norpm.macro import MacroRegistry
 from norpm.macrofile import system_macro_registry
 from norpm.specfile import ParserHooks
+from norpm.exceptions import NorpmRecursionError
 
 db = MacroRegistry()
 db = system_macro_registry()
@@ -50,5 +51,5 @@ for spec in sorted(glob.glob("/rpm-specs/*.spec")):
                 epoch = hooks.tags["epoch"]
             version = hooks.tags["version"]
             print(f"{basename}:{epoch}:{version}", flush=True)
-    except RecursionError:
+    except NorpmRecursionError:
         print(f"{basename}: RecursionError", flush=True)
