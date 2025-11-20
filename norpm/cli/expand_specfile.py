@@ -8,6 +8,7 @@ from norpm.macrofile import system_macro_registry
 from norpm.specfile import specfile_expand, specfile_expand_string
 from norpm.specfile import ParserHooks
 from norpm.exceptions import NorpmError
+from norpm.overrides import override_macro_registry
 
 
 class Hooks(ParserHooks):
@@ -31,6 +32,9 @@ def _get_parser():
         ))
     parser.add_argument("--get-tag", help=(
         "Parse specfile and extract given tag"))
+    parser.add_argument("--macro-overrides", nargs=2,
+                        metavar=("DATABASE.JSON", "TAG"),
+                        help="Override macros per given database and tag.")
     return parser
 
 
@@ -40,6 +44,13 @@ def _main():
     registry = system_macro_registry()
     registry["dist"] = ""
     registry.known_norpm_hacks()
+
+    if opts.macro_overrides:
+        registry = override_macro_registry(registry,
+                                           opts.macro_overrides[0],
+                                           opts.macro_overrides[1])
+
+
     try:
         hooks = Hooks()
         with open(opts.specfile, "r", encoding="utf8") as fd:

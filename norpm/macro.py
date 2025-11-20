@@ -36,7 +36,7 @@ class Macro:
 
     def dump_def(self):
         """Return serializable definition of the macro."""
-        return [{"def": x.value, "params": x.params} for x in self.stack]
+        return [{"value": x.value, "params": x.params} for x in self.stack]
 
     @property
     def value(self):

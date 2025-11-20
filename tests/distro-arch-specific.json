@@ -1,0 +1,1774 @@
+{
+  "GNAT_arches": [
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 ppc64 ppc64p7 ppc64le s390x aarch64 ia64 ppc alpha armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl riscv64"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 ia64 ppc ppc64 ppc64le alpha aarch64"
+      },
+      "tags": [
+        "rhel-7"
+      ]
+    }
+  ],
+  "GPRbuild_arches": [
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 ppc64 ppc64p7 ppc64le s390x aarch64"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide"
+      ]
+    }
+  ],
+  "_efi": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "_efi_srpm_macros_setup": [
+    {
+      "definition": {
+        "params": "",
+        "value": "%{expand:%{lua:\n  -- test if our arch matches\n  local function arch(archmacro)\n    local target = rpm.expand(\" %{_target_cpu} \")\n    local arches = rpm.expand(\" \" .. archmacro .. \" \")\n    local match = string.match(arches, target)\n    return (match ~= nil)\n  end\n  -- give us the arch...\n  local function getarch()\n    if arch(\"ia64\") then\n      return(\"ia64\")\n    elseif arch(\"x86_64\") then\n      return(\"x64\")\n    elseif arch(\"%{ix86}\") then\n      return(\"ia32\")\n    elseif arch(\"aarch64\") then\n      return(\"aa64\")\n    elseif arch(\"%{arm}\") then\n      return(\"arm\")\n    else\n      return(\"none\")\n    end\n  end\n  -- alt arch\n  local function getaltarch()\n    return(\"none\")\n  end\n  -- make some macros\n  local done = rpm.expand(\"%{?_efi}\")\n  if done == nil or done == \"\" then\n    local arch = getarch()\n    local alt = getaltarch()\n    print(\"%global _efi x86_64 aarch64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl i386 i486 i586 i686 pentium3 pentium4 athlon geode\\n\")\n    print(\"%global _efi_vendor redhat\\n\")\n    if arch == \"none\" then\n      print(\"%global _efi_has_arch 0\\n\")\n    else\n      print(\"%global _efi_has_arch 1\\n\")\n    end\n    print(\"%global _efi_arch \" .. getarch() .. \"\\n\")\n    print(\"%global _efi_arch_upper \" .. string.upper(getarch()) .. \"\\n\")\n    if alt == \"none\" then\n      print(\"%global _efi_has_alt_arch 0\\n\")\n    else\n      print(\"%global _efi_has_alt_arch 1\\n\")\n    end\n    print(\"%global _efi_alt_arch \" .. alt .. \"\\n\")\n    print(\"%global _efi_alt_arch_upper \" .. string.upper(alt) .. \"\\n\")\n  end\n}}"
+      },
+      "tags": [
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7"
+      ]
+    },
+    {
+      "definition": {
+        "params": "",
+        "value": "%{expand:%{lua:\n  -- test if our arch matches\n  local function arch(archmacro)\n    local target = rpm.expand(\" %{_target_cpu} \")\n    local arches = rpm.expand(\" \" .. archmacro .. \" \")\n    local match = string.match(arches, target)\n    return (match ~= nil)\n  end\n  -- give us the arch...\n  local function getarch()\n    if arch(\"ia64\") then\n      return(\"ia64\")\n    elseif arch(\"x86_64\") then\n      return(\"x64\")\n    elseif arch(\"%{ix86}\") then\n      return(\"ia32\")\n    elseif arch(\"aarch64\") then\n      return(\"aa64\")\n    elseif arch(\"%{arm}\") then\n      return(\"arm\")\n    else\n      return(\"none\")\n    end\n  end\n  -- alt arch\n  local function getaltarch()\n    if arch(\"x86_64\") then\n      return(\"ia32\")\n    else\n      return(\"none\")\n    end\n  end\n  -- make some macros\n  local done = rpm.expand(\"%{?_efi}\")\n  if done == nil or done == \"\" then\n    local arch = getarch()\n    local alt = getaltarch()\n    print(\"%global _efi x86_64 aarch64 %{arm} %{ix86}\\n\")\n    print(\"%global _efi_vendor redhat\\n\")\n    if arch == \"none\" then\n      print(\"%global _efi_has_arch 0\\n\")\n    else\n      print(\"%global _efi_has_arch 1\\n\")\n    end\n    print(\"%global _efi_arch \" .. getarch() .. \"\\n\")\n    print(\"%global _efi_arch_upper \" .. string.upper(getarch()) .. \"\\n\")\n    if alt == \"none\" then\n      print(\"%global _efi_has_alt_arch 0\\n\")\n    else\n      print(\"%global _efi_has_alt_arch 1\\n\")\n    end\n    print(\"%global _efi_alt_arch \" .. alt .. \"\\n\")\n    print(\"%global _efi_alt_arch_upper \" .. string.upper(alt) .. \"\\n\")\n  end\n}}"
+      },
+      "tags": [
+        "rhel-8"
+      ]
+    },
+    {
+      "definition": {
+        "params": "",
+        "value": "%{expand:%{lua:\n  -- test if our arch matches\n  local function arch(archmacro)\n    local target = rpm.expand(\" %{_target_cpu} \")\n    local arches = rpm.expand(\" \" .. archmacro .. \" \")\n    local match = string.match(arches, target)\n    return (match ~= nil)\n  end\n  -- give us the arch...\n  local function getarch()\n    if arch(\"ia64\") then\n      return(\"ia64\")\n    elseif arch(\"x86_64\") then\n      return(\"x64\")\n    elseif arch(\"%{ix86}\") then\n      return(\"ia32\")\n    elseif arch(\"aarch64\") then\n      return(\"aa64\")\n    elseif arch(\"%{arm}\") then\n      return(\"arm\")\n    elseif arch(\"riscv64\") then\n      return(\"riscv64\")\n    else\n      return(\"none\")\n    end\n  end\n  -- alt arch\n  local function getaltarch()\n    return(\"none\")\n  end\n  -- make some macros\n  local done = rpm.expand(\"%{?_efi}\")\n  if done == nil or done == \"\" then\n    local arch = getarch()\n    local alt = getaltarch()\n    print(\"%global _efi x86_64 aarch64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl i386 i486 i586 i686 pentium3 pentium4 athlon geode riscv64\\n\")\n    print(\"%global _efi_vendor fedora\\n\")\n    if arch == \"none\" then\n      print(\"%global _efi_has_arch 0\\n\")\n    else\n      print(\"%global _efi_has_arch 1\\n\")\n    end\n    print(\"%global _efi_arch \" .. getarch() .. \"\\n\")\n    print(\"%global _efi_arch_upper \" .. string.upper(getarch()) .. \"\\n\")\n    if alt == \"none\" then\n      print(\"%global _efi_has_alt_arch 0\\n\")\n    else\n      print(\"%global _efi_has_alt_arch 1\\n\")\n    end\n    print(\"%global _efi_alt_arch \" .. alt .. \"\\n\")\n    print(\"%global _efi_alt_arch_upper \" .. string.upper(alt) .. \"\\n\")\n  end\n}}"
+      },
+      "tags": [
+        "fedora-42",
+        "fedora-43"
+      ]
+    },
+    {
+      "definition": {
+        "params": "",
+        "value": "%{expand:%{lua:\n  -- test if our arch matches\n  local function arch(archmacro)\n    local target = rpm.expand(\" %{_target_cpu} \")\n    local arches = rpm.expand(\" \" .. archmacro .. \" \")\n    local match = string.match(arches, target)\n    return (match ~= nil)\n  end\n  -- give us the arch...\n  local function getarch()\n    if arch(\"ia64\") then\n      return(\"ia64\")\n    elseif arch(\"x86_64\") then\n      return(\"x64\")\n    elseif arch(\"%{ix86}\") then\n      return(\"ia32\")\n    elseif arch(\"aarch64\") then\n      return(\"aa64\")\n    elseif arch(\"%{arm}\") then\n      return(\"arm\")\n    elseif arch(\"riscv64\") then\n      return(\"riscv64\")\n    else\n      return(\"none\")\n    end\n  end\n  -- alt arch\n  local function getaltarch()\n    if arch(\"x86_64\") then\n      return(\"ia32\")\n    else\n      return(\"none\")\n    end\n  end\n  -- make some macros\n  local done = rpm.expand(\"%{?_efi}\")\n  if done == nil or done == \"\" then\n    local arch = getarch()\n    local alt = getaltarch()\n    print(\"%global _efi x86_64 aarch64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl i386 i486 i586 i686 pentium3 pentium4 athlon geode riscv64\\n\")\n    print(\"%global _efi_vendor fedora\\n\")\n    if arch == \"none\" then\n      print(\"%global _efi_has_arch 0\\n\")\n    else\n      print(\"%global _efi_has_arch 1\\n\")\n    end\n    print(\"%global _efi_arch \" .. getarch() .. \"\\n\")\n    print(\"%global _efi_arch_upper \" .. string.upper(getarch()) .. \"\\n\")\n    if alt == \"none\" then\n      print(\"%global _efi_has_alt_arch 0\\n\")\n    else\n      print(\"%global _efi_has_alt_arch 1\\n\")\n    end\n    print(\"%global _efi_alt_arch \" .. alt .. \"\\n\")\n    print(\"%global _efi_alt_arch_upper \" .. string.upper(alt) .. \"\\n\")\n  end\n}}"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-rawhide"
+      ]
+    }
+  ],
+  "arm": [
+    {
+      "definition": {
+        "params": null,
+        "value": "armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "armv3l armv4b armv4l armv4tl armv5b armv5l armv5teb armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl"
+      },
+      "tags": [
+        "opensuse-tumbleweed"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl"
+      },
+      "tags": [
+        "rhel-8"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "armv3l armv4b armv4l armv4tl armv5tel armv5tejl armv6l armv7l armv7hl armv7hnl"
+      },
+      "tags": [
+        "rhel-7"
+      ]
+    }
+  ],
+  "arm32": [
+    {
+      "definition": {
+        "params": null,
+        "value": "armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "armv3l armv4b armv4l armv4tl armv5b armv5l armv5teb armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl"
+      },
+      "tags": [
+        "opensuse-tumbleweed"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "rhel-7",
+        "rhel-8"
+      ]
+    }
+  ],
+  "arm64": [
+    {
+      "definition": {
+        "params": null,
+        "value": "aarch64"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "rhel-7",
+        "rhel-8"
+      ]
+    }
+  ],
+  "centos": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "cross": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "efi": [
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 aarch64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl i386 i486 i586 i686 pentium3 pentium4 athlon geode riscv64"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7"
+      ]
+    }
+  ],
+  "el10": [
+    {
+      "definition": {
+        "params": null,
+        "value": "1"
+      },
+      "tags": [
+        "rhel-10"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "el11": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "el6": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "el7": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "1"
+      },
+      "tags": [
+        "rhel-7"
+      ]
+    }
+  ],
+  "el8": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "1"
+      },
+      "tags": [
+        "rhel-8"
+      ]
+    }
+  ],
+  "el9": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "1"
+      },
+      "tags": [
+        "rhel-9"
+      ]
+    }
+  ],
+  "epel": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "fc40": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "fc41": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "1"
+      },
+      "tags": [
+        "fedora-41"
+      ]
+    }
+  ],
+  "fc42": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "1"
+      },
+      "tags": [
+        "fedora-42"
+      ]
+    }
+  ],
+  "fc43": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "1"
+      },
+      "tags": [
+        "fedora-43"
+      ]
+    }
+  ],
+  "fc44": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "1"
+      },
+      "tags": [
+        "fedora-rawhide"
+      ]
+    }
+  ],
+  "fc45": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "fedora": [
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "43"
+      },
+      "tags": [
+        "fedora-43"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "44"
+      },
+      "tags": [
+        "fedora-rawhide"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "42"
+      },
+      "tags": [
+        "fedora-42"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "41"
+      },
+      "tags": [
+        "fedora-41"
+      ]
+    }
+  ],
+  "fpc_arches": [
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl x86_64 ppc64le aarch64"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide"
+      ]
+    }
+  ],
+  "gccgo_arches": [
+    {
+      "definition": {
+        "params": null,
+        "value": "mips mipsel mipsr6 mipsr6el mips64 mips64el mips64r6 mips64r6el"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7"
+      ]
+    }
+  ],
+  "go_arches": [
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 aarch64 ppc64le s390x mips mipsel mipsr6 mipsr6el mips64 mips64el mips64r6 mips64r6el"
+      },
+      "tags": [
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl aarch64 ppc64le s390x mips mipsel mipsr6 mipsr6el mips64 mips64el mips64r6 mips64r6el"
+      },
+      "tags": [
+        "rhel-8"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl aarch64 ppc64le s390x riscv64 mips mipsel mipsr6 mipsr6el mips64 mips64el mips64r6 mips64r6el"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide"
+      ]
+    }
+  ],
+  "golang_arches": [
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 aarch64 ppc64le s390x"
+      },
+      "tags": [
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl aarch64 ppc64le s390x"
+      },
+      "tags": [
+        "rhel-8"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl aarch64 ppc64le s390x riscv64"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide"
+      ]
+    }
+  ],
+  "golang_arches_future": [
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl aarch64 ppc64le s390x riscv64"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7",
+        "rhel-8"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl aarch64 ppc64le s390x"
+      },
+      "tags": [
+        "rhel-9"
+      ]
+    }
+  ],
+  "gometa": [
+    {
+      "definition": {
+        "params": "az:svifL",
+        "value": "BuildRequires: go-rpm-macros\n%if \"%{-m}\" == \"\"\nExclusiveArch: %{golang_arches}\n%else\nExclusiveArch: %{golang_arches_future}\n%endif\n"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7"
+      ]
+    }
+  ],
+  "grafana_arches": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "grafanapcp_arches": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "grub2_exclude_arches": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "hare_arches": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 aarch64 riscv64"
+      },
+      "tags": [
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide"
+      ]
+    }
+  ],
+  "ix86": [
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "java_arches": [
+    {
+      "definition": {
+        "params": null,
+        "value": "aarch64 ppc64le s390x x86_64 riscv64"
+      },
+      "tags": [
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7",
+        "rhel-8"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "aarch64 ppc64le s390x x86_64"
+      },
+      "tags": [
+        "fedora-41",
+        "rhel-9"
+      ]
+    }
+  ],
+  "kernel_arches": [
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 s390x ppc64le aarch64"
+      },
+      "tags": [
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 s390x ppc64le aarch64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl"
+      },
+      "tags": [
+        "rhel-8"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 s390x ppc64le aarch64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl riscv64"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide"
+      ]
+    }
+  ],
+  "ldc_arches": [
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl aarch64"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl ppc64 ppc64p7 ppc64le"
+      },
+      "tags": [
+        "rhel-8"
+      ]
+    }
+  ],
+  "lua": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "mips": [
+    {
+      "definition": {
+        "params": null,
+        "value": "mips mipsel mipsr6 mipsr6el mips64 mips64el mips64r6 mips64r6el"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "rhel-7"
+      ]
+    }
+  ],
+  "mips32": [
+    {
+      "definition": {
+        "params": null,
+        "value": "mips mipsel mipsr6 mipsr6el"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "rhel-7"
+      ]
+    }
+  ],
+  "mips64": [
+    {
+      "definition": {
+        "params": null,
+        "value": "mips64 mips64el mips64r6 mips64r6el"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "rhel-7"
+      ]
+    }
+  ],
+  "mono_arches": [
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 sparc sparcv9 ia64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl aarch64 alpha s390x ppc ppc64 ppc64le"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 sparc sparcv9 ia64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl aarch64 alpha s390x ppc ppc64 ppc64le"
+      },
+      "tags": [
+        "rhel-8"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 sparc sparcv9 ia64 armv3l armv4b armv4l armv4tl armv5tel armv5tejl armv6l armv7l armv7hl armv7hnl aarch64 alpha s390x ppc ppc64 ppc64le"
+      },
+      "tags": [
+        "rhel-7"
+      ]
+    }
+  ],
+  "no64bit": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "nodejs_arches": [
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl aarch64 ppc64 ppc64p7 ppc64le s390x riscv64"
+      },
+      "tags": [
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl aarch64 ppc64 ppc64p7 ppc64le s390x"
+      },
+      "tags": [
+        "rhel-8"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 armv3l armv4b armv4l armv4tl armv5tel armv5tejl armv6l armv7l armv7hl armv7hnl aarch64 ppc64le s390x"
+      },
+      "tags": [
+        "rhel-7"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl aarch64 ppc64 ppc64p7 ppc64le s390x"
+      },
+      "tags": [
+        "fedora-41",
+        "rhel-9"
+      ]
+    }
+  ],
+  "ocaml_native_compiler": [
+    {
+      "definition": {
+        "params": null,
+        "value": "aarch64 ppc64 ppc64p7 ppc64le riscv64 s390x x86_64"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "rhel-10"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "aarch64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl i386 i486 i586 i686 pentium3 pentium4 athlon geode ppc ppc64 ppc64le riscv64 s390x sparc sparcv9 x86_64"
+      },
+      "tags": [
+        "rhel-8"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "aarch64 ppc64 ppc64p7 ppc64le riscv64 s390x x86_64 x86_64_v2 x86_64_v3 x86_64_v4 amd64 em64t"
+      },
+      "tags": [
+        "fedora-43",
+        "fedora-rawhide"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "aarch64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl i386 i486 i586 i686 pentium3 pentium4 athlon geode ppc ppc64 ppc64le riscv64 s390x sparc sparcv9 x86_64"
+      },
+      "tags": [
+        "rhel-9"
+      ]
+    }
+  ],
+  "openblas_arches": [
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 i386 i486 i586 i686 pentium3 pentium4 athlon geode armv7hl ppc64 ppc64p7 ppc64le aarch64 s390x riscv64"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 i386 i486 i586 i686 pentium3 pentium4 athlon geode armv7hl ppc64 ppc64p7 ppc64le aarch64 s390x"
+      },
+      "tags": [
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "power64": [
+    {
+      "definition": {
+        "params": null,
+        "value": "ppc64 ppc64p7 ppc64le"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "qt5_qtwebengine_arches": [
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl aarch64 mips mipsel mips64el riscv64"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "i386 i486 i586 i686 pentium3 pentium4 athlon geode x86_64 armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl aarch64 mips mipsel mips64el"
+      },
+      "tags": [
+        "rhel-9"
+      ]
+    }
+  ],
+  "qt6_qtwebengine_arches": [
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 aarch64 ppc64le"
+      },
+      "tags": [
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 aarch64"
+      },
+      "tags": [
+        "fedora-41"
+      ]
+    }
+  ],
+  "rhel": [
+    {
+      "definition": {
+        "params": null,
+        "value": "10"
+      },
+      "tags": [
+        "rhel-10"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "8"
+      },
+      "tags": [
+        "rhel-8"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "7"
+      },
+      "tags": [
+        "rhel-7"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "9"
+      },
+      "tags": [
+        "rhel-9"
+      ]
+    }
+  ],
+  "riscv": [
+    {
+      "definition": {
+        "params": null,
+        "value": "riscv32 riscv64 riscv128"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "rhel-7",
+        "rhel-8"
+      ]
+    }
+  ],
+  "riscv128": [
+    {
+      "definition": {
+        "params": null,
+        "value": "riscv128"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "rhel-7",
+        "rhel-8"
+      ]
+    }
+  ],
+  "riscv32": [
+    {
+      "definition": {
+        "params": null,
+        "value": "riscv32"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "rhel-7",
+        "rhel-8"
+      ]
+    }
+  ],
+  "riscv64": [
+    {
+      "definition": {
+        "params": null,
+        "value": "riscv64"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "rhel-7",
+        "rhel-8"
+      ]
+    }
+  ],
+  "rust_arches": [
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 i386 i486 i586 i686 pentium3 pentium4 athlon geode armv7hl aarch64 ppc64 ppc64le riscv64 s390x"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-7"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 i686 armv7hl aarch64 ppc64 ppc64le s390x"
+      },
+      "tags": [
+        "rhel-8"
+      ]
+    }
+  ],
+  "sparc": [
+    {
+      "definition": {
+        "params": null,
+        "value": "sparc sparcv8 sparcv9 sparcv9v sparc64 sparc64v"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "suse_version": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "1699"
+      },
+      "tags": [
+        "opensuse-tumbleweed"
+      ]
+    }
+  ],
+  "use_system_admesh": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "with_alt_arch": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "with_bootstrap": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "with_cython": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "with_cython_compile": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "with_debug_valgrind": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "with_dnf5": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "with_docs": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "with_optimized_init": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "with_spec_integration": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "with_x86_debug": [
+    {
+      "definition": null,
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "x86_64": [
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 x86_64_v2 x86_64_v3 x86_64_v4 amd64 em64t"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide",
+        "opensuse-tumbleweed",
+        "rhel-10"
+      ]
+    },
+    {
+      "definition": null,
+      "tags": [
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    }
+  ],
+  "zig_arches": [
+    {
+      "definition": null,
+      "tags": [
+        "opensuse-tumbleweed",
+        "rhel-10",
+        "rhel-7",
+        "rhel-8",
+        "rhel-9"
+      ]
+    },
+    {
+      "definition": {
+        "params": null,
+        "value": "x86_64 aarch64 riscv64 mips64 mips64el mips64r6 mips64r6el"
+      },
+      "tags": [
+        "fedora-41",
+        "fedora-42",
+        "fedora-43",
+        "fedora-rawhide"
+      ]
+    }
+  ]
+}
