@@ -1,1 +1,2 @@
 global-include *.spec *.exp
+include tests/distro-arch-specific.json
