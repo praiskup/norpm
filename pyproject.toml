@@ -7,7 +7,7 @@ readme = "README.md"
 # TODO update to license = "LGPL-2.1-or-later" when we have setuptools >= 77 in all Fedoras
 license = { text = "LGPL-2.1-or-later" }
 dependencies = [
-    "ply",
+    "lark",
 ]
 
 
