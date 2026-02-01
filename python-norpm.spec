@@ -31,6 +31,24 @@ Summary:        %summary
 %prep
 %autosetup -p1 -n norpm-%version
 
+%if 0%{?rhel} == 9
+cat > setup.py <<EOF
+from setuptools import setup
+setup(
+    name='norpm',
+    version='%version',
+    packages=['norpm', 'norpm.cli'],
+    install_requires=['ply'],
+    entry_points={
+        'console_scripts': [
+            'norpm-expand-specfile = norpm.cli.expand_specfile:_main',
+            'norpm-conditions-for-arch-statements = norpm.cli.conditions_for_arch_statements:_main',
+        ],
+    },
+)
+EOF
+%endif
+
 
 %generate_buildrequires
 %pyproject_buildrequires -g test
