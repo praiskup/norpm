@@ -19,6 +19,7 @@ jobs:
     metadata:
       targets:
         - fedora-all
+        - epel-9
         - epel-10-all
 
   - <<: *copr
