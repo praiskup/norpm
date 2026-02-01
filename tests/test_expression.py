@@ -96,6 +96,11 @@ def test_expression_expansion():
     assert specfile_expand('%[ 0 ? "a" : "b" ]', MacroRegistry()) == "b"
     assert specfile_expand('%[ 1 + 10 ? 2 : 3 ]', MacroRegistry()) == "2"
     assert specfile_expand('%[!(0%{?rhel} >= 10)]', MacroRegistry()) == "1"
+    assert specfile_expand('%[ "0" ? "1" : "2" ]', MacroRegistry()) == "1"
+    assert specfile_expand('%[ "1" ? "1" : "2" ]', MacroRegistry()) == "1"
+    assert specfile_expand('%[ "1" + "10" ]', MacroRegistry()) == "110"
+    assert specfile_expand('%[ "1" + "10" ? 1 : 0 ]', MacroRegistry()) == "1"
+    assert specfile_expand('%[ "1" + "10" ? "1" : 0 ]', MacroRegistry()) == "1"
 
 
 def test_expand_version_comparisons():
@@ -109,6 +114,7 @@ YES
 %[ v"0:2.5" == v"2.005" ]
 %[ v"0:2.5" < v"1:2.5" ]
 %[ v"0:2.5" <= v"1:2.5" ]
+%[ v"0:2.5" > v"1:2.5" ]
 """, MacroRegistry()) == """\
 YES
 1
@@ -116,7 +122,13 @@ YES
 1
 1
 1
+0
 """
+
+
+def test_expression_failures():
+    """Exception parser raises error sometimes.  Test those."""
+    assert specfile_expand('%[ "10" - "2" ]', {}) == '%[ "10" - "2" ]'
 
 
 def test_empty_expansion_in_epxr():
@@ -174,3 +186,46 @@ def test_node_version_macro():
 1
 0
 """
+
+
+def check_expr_side_effects(text, expanded_as, defined=None,
+                            not_defined=None):
+    """
+    Expand TEXT, check it expands as EXPANDED_AS, and check if macros DEFINED
+    and NOT_DEFINED are {,not} defined.
+    """
+    db = MacroRegistry()
+    assert specfile_expand(text, db) == expanded_as
+    for check in defined or []:
+        name = check[0]
+        check = check[1:]
+        assert name in db.db
+        if check:
+            value = check[0]
+            check = check[1:]
+            assert db[name].value == value
+    for check in not_defined or []:
+        name = check[0]
+        assert name not in db.db
+
+
+def test_expression_side_effects():
+    """ Normal expression expansion """
+    check_expr_side_effects('%[ "ahoj" && "pepo" && "0" ]', "0")
+    check_expr_side_effects('%[ "" || "ahoj" || "pepo" ]', "ahoj")
+    check_expr_side_effects('%[ %["0"] ? "left" : "right" ]', "right")
+    check_expr_side_effects('%[ "0" ? "true" : "false" ]', "true")
+    check_expr_side_effects('%[ 0 ? "true" : "false" ]', "false")
+    check_expr_side_effects('%[ 01 ? "true" : "false" ]', "true")
+    check_expr_side_effects('%[ "0" ? "%{expand:%%global foo 1}"'
+                            ': "%{expand:%%global bar 1}" ]', "",
+                            [["foo", "1"]], [["bar"]])
+    check_expr_side_effects('%[ "" ? "%{expand:%%global foo 1}" :'
+                            '"%{expand:%%global bar 1}" ]', "",
+                            [["bar", "1"]], [["foo"]])
+    check_expr_side_effects('%[ 0 ? "%{expand:%%global foo 1}" :'
+                            '"%{expand:%%global bar 1}" ]', "",
+                            [["bar", "1"]], [["foo"]])
+    check_expr_side_effects('%[ 1 ? "%{expand:%%global foo 1}"'
+                            ': "%{expand:%%global bar 1}" ]', "",
+                            [["foo", "1"]], [["bar"]])

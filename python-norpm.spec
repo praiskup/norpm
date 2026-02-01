@@ -38,7 +38,7 @@ setup(
     name='norpm',
     version='%version',
     packages=['norpm', 'norpm.cli'],
-    install_requires=['ply'],
+    install_requires=['lark-parser'],
     entry_points={
         'console_scripts': [
             'norpm-expand-specfile = norpm.cli.expand_specfile:_main',

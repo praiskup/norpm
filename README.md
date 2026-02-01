@@ -5,7 +5,7 @@ Parse RPM macro files and spec files, and expand macros safely—without the
 potential Turing-Complete side effects.
 
 This is a standalone library that depends only on the standard Python library
-and [PLY](https://github.com/dabeaz/ply) (for expression parsing).
+and [lark](https://github.com/lark-parser/lark) (for expression parsing).
 
 How to Use It
 -------------
