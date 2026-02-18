@@ -27,12 +27,20 @@ def test_defined():
 %define foo bar
 %{defined:foo}
 %{defined: foo}
+%{defined:defined}
+%{defined:undefined}
+%{defined:gsub}
+%{?gsub:yes}
 end
 """
     assert specfile_expand_string(spec, MacroRegistry()) == '''\
 0
 1
 %{? foo:1}%{!? foo:0}
+1
+0
+1
+yes
 end
 '''
 

@@ -447,3 +447,27 @@ def test_quote():
     assert specfile_expand_string(macrotext, macros) == """\
 "a b c d e f0" "1"
 """
+
+
+def test_quote_and_gsub_and_doublestar():
+    """
+    Test for https://github.com/rpm-software-management/R-rpm-macros/pull/20
+    """
+    spec = """\
+%define r_gsub() %{?gsub:%gsub %{**}}
+%define R_rpm_version() %{quote:%global __R_upstream_version %1}%{r_gsub %1 - .}
+%define __R_version %{?__R_upstream_version}%{!?__R_upstream_version:%version}
+%define __R_name %gsub %{name} ^R[-] %{quote:}
+Name: R-foo
+Version: %R_rpm_version 1.2-3-4
+%__R_upstream_version
+%__R_name
+%version
+"""
+    assert specfile_expand(spec, MacroRegistry()) == """\
+Name: R-foo
+Version: 1.2.3.4
+1.2-3-4
+foo
+1.2.3.4
+"""
