@@ -594,7 +594,7 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     if context.calls is not None:
         context.calls.add(name)
 
-    defined = name in definitions
+    defined = name in definitions or _is_builtin(name)
 
     if name[0] == '-' and name[1].isalpha():
         # expanding %{-m} like strings, these have special conditions
