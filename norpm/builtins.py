@@ -107,13 +107,14 @@ class _BuiltinQuote(_Builtin):
     This macro makes sure that the content is handled a single macro argument,
     even if contains spaces.
     """
+    expand_params = False
 
     @classmethod
     def eval(cls, snippet, params, db):
         """
         Calculates the length of an expanded macro.
         """
-        return QuotedString(params[0])
+        return QuotedString(params)
 
 
 class _BuiltinRep(_Builtin):

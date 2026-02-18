@@ -652,7 +652,8 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     definitions.define("#", str(len(args)), special=True)
     definitions.define("0", name, special=True)
     definitions.define("*", ' '.join(args), special=True)
-    definitions.define("**", ' '.join(params), special=True)
+    definitions.define("**", ' '.join([f"%{{quote:{p}}}" for p in params]),
+                       special=True)
 
     retval = _specfile_expand_string(context, retval, definitions, depth+1)
 
