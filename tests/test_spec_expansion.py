@@ -463,6 +463,7 @@ Version: %R_rpm_version 1.2-3-4
 %__R_upstream_version
 %__R_name
 %version
+%r_gsub epoch:1.2-3 :1.2[-]3 %{quote:}
 """
     assert specfile_expand(spec, MacroRegistry()) == """\
 Name: R-foo
@@ -470,4 +471,5 @@ Version: 1.2.3.4
 1.2-3-4
 foo
 1.2.3.4
+epoch
 """
