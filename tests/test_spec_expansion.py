@@ -473,3 +473,21 @@ foo
 1.2.3.4
 epoch
 """
+
+
+def test_definition_with_curly_brackets():
+    """
+    Test '%{define foo 1}' and '%{global foo 1}'
+    """
+    spec= """\
+%{global hello 1}%hello
+%{define world 2}%world
+%{define with_space   %{quote: a b c}  }%with_space
+%[ %{global hello 3} || %{define world 4} ]%hello%world
+"""
+    assert specfile_expand(spec, MacroRegistry()) == """\
+1
+2
+ a b c
+034
+"""
