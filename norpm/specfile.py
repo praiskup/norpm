@@ -19,7 +19,7 @@ from dataclasses import dataclass
 import re
 
 from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
-from norpm.macro import is_macro_character, parse_macro_call
+from norpm.macro import is_macro_character, parse_macro_call, drop_curly_brackets
 from norpm.macrofile import macrofile_parse, macrofile_split_generator
 from norpm.getopt import getopt
 from norpm.logging import get_logger
@@ -583,7 +583,8 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     if _isdef_start(snippet):
         if not context.expanding:
             return ""
-        _, params = snippet[1:].split(maxsplit=1)
+        call = drop_curly_brackets(snippet)
+        _, params = call.split(maxsplit=1)
         macrofile_parse("%" + params, definitions, inspec=True)
         return ""
 
@@ -886,11 +887,11 @@ def _specfile_expand_generator(context, content, macros):
 def _isdef_start(string, keywords=None):
     if keywords is None:
         keywords = ["global", "define"]
-    for pfx in keywords:
-        pfx = "%" + pfx
-        if string.startswith(pfx):
-            if string[len(pfx):][0] in ["\t", " "]:
-                return True
+    for mpfx in keywords:
+        for pfx in [f"%{mpfx}", f"%{{{mpfx}"]:
+            if string.startswith(pfx):
+                if string[len(pfx):][0] in ["\t", " "]:
+                    return True
     return False
 
 
@@ -929,7 +930,8 @@ def _specfile_expand_string_generator(context, string, macros, depth=0,
             if not context.expanding:
                 continue
 
-            _, definition = buffer.split(maxsplit=1)
+            definition = drop_curly_brackets(buffer)
+            _, definition = definition.split(maxsplit=1)
             expanded_def = specfile_expand_string(definition, macros, depth+1)
             for name, body, params in macrofile_split_generator('%' + expanded_def, inspec=True):
                 macros[name] = (body, params)

@@ -162,6 +162,15 @@ def is_macro_name(name):
     return all(is_macro_character(c) for c in name)
 
 
+def drop_curly_brackets(call):
+    """
+    Drop curly brackets from macro call.
+    """
+    if call.startswith("%{"):
+        return call[2:-1]
+    return call[1:]
+
+
 def parse_macro_call(call):
     """Given a macro call, return 4-ary
         (success, name, conditionals, params)
@@ -175,10 +184,7 @@ def parse_macro_call(call):
     # pylint: disable=too-many-branches
     success = True
 
-    if call.startswith("%{"):
-        call = call[2:-1]
-    else:
-        call = call[1:]
+    call = drop_curly_brackets(call)
 
     conditionals = set()
     name = ""
