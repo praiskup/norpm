@@ -10,7 +10,7 @@ on:
 jobs:
   run-python-script:
     runs-on: ubuntu-latest
-    container: quay.io/redhat-user-workloads/fedora-copr-tenant/norpm-testing-image:latest@sha256:9eb585a54fbf0c56316fd02ba0f804fd20962b40e364bcdab1f2557f9c8ba828
+    container: quay.io/redhat-user-workloads/fedora-copr-tenant/norpm-testing-image:latest@sha256:45aaead5a03e26020eba3c565d4d847568a336c2529bf92db7fbf9492ee21aa1
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

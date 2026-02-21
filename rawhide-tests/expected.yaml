@@ -1,9 +1,21 @@
 ---
-lines: 23976
+lines: 23582
 
 failures: {}
 
 errors:
+  chatterino2.spec:
+    version: "%{lua:"
+    epoch: "(none)"
+  nginx-mod-js-challenge.spec:
+    version: "0^20230517.git%(echo %{commithash}|head -c7)"
+    epoch: "(none)"
+  nodejs20.spec:
+    version: "%{node_version}"
+    epoch: "%{node_epoch}"
+  nodejs22.spec:
+    version: "%{node_version}"
+    epoch: "%{node_epoch}"
   nodejs24.spec:
     reason: something wrong with node
     epoch: "%{node_epoch}"
@@ -34,9 +46,6 @@ errors:
     epoch: "(none)"
   enkiTS.spec:
     version: "%{lua:"
-    epoch: "(none)"
-  expat.spec:
-    version: "%(echo %{unversion} | sed 's/_/./g')"
     epoch: "(none)"
   fcitx5-mozc.spec:
     version: "%{lua:"
@@ -74,15 +83,6 @@ errors:
   mesa-compat.spec:
     version: "%{lua:ver = string.gsub(rpm.expand(\"%{ver}\"), \"-\", \"~\"); print(ver)}"
     epoch: "(none)"
-  mesa.spec:
-    version: "%{lua:ver = string.gsub(rpm.expand(\"%{ver}\"), \"-\", \"~\"); print(ver)}"
-    epoch: "(none)"
-  moby-engine.spec:
-    version: "%{lua:"
-    epoch: "(none)"
-  mstflint.spec:
-    version: "%{lua:"
-    epoch: "(none)"
   netmask.spec:
     version: "%{lua:"
     epoch: "(none)"
@@ -92,14 +92,8 @@ errors:
   openscad-bosl2.spec:
     version: "%{lua:"
     epoch: "(none)"
-  pack.spec:
-    version: "%(b=%{built_tag_strip}; echo ${b/-/\"~\"})"
-    epoch: "(none)"
   parlaylib.spec:
     version: "2.3.1^20230215git%(c=36459f42a84207330eae706c47e6fab712e6a149; echo ${c:0:7})"
-    epoch: "(none)"
-  perftest.spec:
-    version: "%{lua: print((string.gsub(rpm.expand(\"%{upstream_ver}\"),\"-\",\".\")))}"
     epoch: "(none)"
   perl-Business-ISBN.spec:
     version: "%(echo '%{cpan_version}' | tr '_' '.'})"
@@ -108,7 +102,7 @@ errors:
     version: "%(echo '%{cpan_version}' | sed 's/.(.)/.1./')"
     epoch: "(none)"
   perl-Finance-Quote.spec:
-    version: "%(LANG=C printf \"%.4f\" %{cpan_version})"
+    version: "%(LANG=C printf \"%.4f\" %(echo %{cpan_version} | tr -d _))"
     epoch: "(none)"
   perl-Geo-IPfree.spec:
     version: "%(echo '%{cpan_version}' | sed 's/(....)(.)/1.2/')"
@@ -158,7 +152,7 @@ errors:
   pgn-extract.spec:
     version: "%(echo %{srcversion} | tr - .)"
     epoch: "(none)"
-  phototonic.spec:
+  portsentry.spec:
     version: "%{lua:"
     epoch: "(none)"
   pqmarble.spec:
@@ -179,6 +173,9 @@ errors:
   span.spec:
     version: "%{lua:"
     epoch: "(none)"
+  star.spec:
+    version: "%(echo %version_schily | tr '-' '.')"
+    epoch: "(none)"
   stargz-snapshotter.spec:
     version: "%(b=%{built_tag_strip}; echo ${b/-/\"~\"})"
     epoch: "(none)"
@@ -187,4 +184,7 @@ errors:
     epoch: "(none)"
   vcpkg.spec:
     version: "%(echo %{repo_tag} | sed 's/-/./g')"
+    epoch: "(none)"
+  viking.spec:
+    version: "%{lua:"
     epoch: "(none)"
