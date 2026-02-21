@@ -1,6 +1,6 @@
 [project]
 name = "norpm"
-version = "1.8"
+version = "1.9"
 description = "RPM Macro Expansion in Python"
 authors = [{ name="Pavel Raiskup", email="pavel@raiskup.cz" }]
 readme = "README.md"
