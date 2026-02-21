@@ -1,0 +1,1 @@
+FROM quay.io/redhat-user-workloads/fedora-copr-tenant/norpm-testing-image:latest-el10@sha256:5cfa3538ad66710a7d8944ffe59dda50f1a67a2b6d561ef891e1133b15707055

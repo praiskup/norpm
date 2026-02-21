@@ -1,0 +1,7 @@
+---
+grafana-pcp.spec:
+  exclusivearch:
+    - '%{lua: go_arches = {}'
+grafana.spec:
+  exclusivearch:
+    - '%{lua: go_arches = {}'
