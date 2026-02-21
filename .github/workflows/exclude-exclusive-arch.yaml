@@ -1,0 +1,55 @@
+---
+name: Exclude/ExclusiveArch
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  run-python-script:
+    name: "${{ matrix.name }} specfiles"
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - source: tests/containers/c10s/Containerfile
+            env: tests/containers/fedora-branched/Containerfile
+            name: CentOS Stream 10
+            target: centos-stream+epel-10
+            failures: /src/tests/containers/c10s/exclude-failures.yaml
+          - source: tests/containers/fedora-branched/Containerfile
+            env: tests/containers/c10s/Containerfile
+            name: Fedora Stable
+            target: fedora-44
+            failures: /src/tests/containers/fedora-branched/exclude-failures.yaml
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Extract Image ID from Containerfile
+        id: prep
+        run: |
+          IMAGE_NAME=$(grep -im1 '^FROM' ${{ matrix.source }} | awk '{print $2}' | xargs)
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+          echo "Working with $IMAGE_NAME (z file: ${{ matrix.source }})"
+
+      - name: Pull and Extract files
+        run: |
+          set -x
+          mkdir -p ./extracted_artifacts
+          CONTAINER_ID=$(docker create ${{ env.IMAGE_NAME }})
+          for i in rpm-specs rpm-specs-arches some-exclusion-found.txt; do
+            docker cp $CONTAINER_ID:/$i ./extracted_artifacts/
+          done
+          docker rm $CONTAINER_ID
+
+      - name: Test Execution
+        run: |
+          set -x
+          IMAGE_NAME=$(grep -im1 '^FROM' ${{ matrix.env }} | awk '{print $2}' | xargs)
+          docker run --rm \
+          -v ${{ github.workspace }}:/src:Z "$IMAGE_NAME" \
+          /bin/bash -c "set -x ; dnf install -y python3-pyyaml ; /src/test_exclude_exclusive_arch.py ${{ matrix.target }} ${{ matrix.failures }}"

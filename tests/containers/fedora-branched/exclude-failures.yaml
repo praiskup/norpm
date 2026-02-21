@@ -1,0 +1,31 @@
+---
+blah.spec:
+  exclusivearch:
+    - 'x86_64 aarch64 ppc64le s390x riscv64'
+colorscad.spec:
+  excludearch:
+    - 'i386 i486 i586 i686 pentium3 pentium4 athlon geode'
+edwin-fonts.spec:
+  buildarch: []
+grafana-pcp.spec:
+  exclusivearch:
+    - '%{lua: go_arches = {}'
+grafana.spec:
+  exclusivearch:
+    - '%{lua: go_arches = {}'
+kdepim-addons.spec:
+  exclusivearch:
+    - "%(echo %{qt6_qtwebengine_arches} | sed -e 's/i686//g')"
+marcsabatella-campania-fonts.spec:
+  buildarch: []
+nodejs-cjs-module-lexer.spec:
+  exclusivearch:
+    - '%{lua:'
+sigul.spec:
+  excludearch: []
+steinberg-bravura-fonts.spec:
+  buildarch: []
+steinberg-petaluma-fonts.spec:
+  buildarch: []
+terminus-fonts.spec:
+  buildarch: []
