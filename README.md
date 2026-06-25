@@ -1,3 +1,5 @@
+IGNORE
+
 RPM Macro Expansion in Python
 =============================
 
