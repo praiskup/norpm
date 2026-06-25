@@ -27,7 +27,7 @@ def test_basic_spec():
 
 def test_parametric_line():
     macros = MacroRegistry()
-    macros["foo"] = ("a %1 b", "")
+    macros["foo"] = ("a %1 b", "", set())
     macros["bar"] = "a %1 b"
     assert macros["foo"].parametric
     assert not macros["bar"].parametric

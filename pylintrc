@@ -73,6 +73,9 @@ bad-names=foo,bar,baz,toto,tutu,tata
 
 [DESIGN]
 
+# Maximum number of positional arguments for function / method
+max-positional-arguments=6
+
 # Maximum number of arguments for function / method
 max-args=1000
 
@@ -106,7 +109,7 @@ max-public-methods=1000
 max-line-length=120
 
 # Maximum number of lines in a module
-max-module-lines=1000
+max-module-lines=1500
 
 # String used as indentation unit. This is usually " " (4 spaces) or "\t" (1
 # tab).

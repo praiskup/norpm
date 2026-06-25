@@ -19,6 +19,7 @@ class _CTX():
         self.macroname = ""
         self.params = ""
         self.value = ""
+        self.modifiers = ""
 
 
 def macrofile_parse(file_contents, macros, inspec=False):
@@ -26,8 +27,8 @@ def macrofile_parse(file_contents, macros, inspec=False):
     definitions), and store the definitions to macros registry.  See
     macrofile_split_generator() what inspec=True means.
     """
-    for name, value, params in macrofile_split_generator(file_contents, inspec):
-        macros[name] = (value, params)
+    for name, value, params, modifiers in macrofile_split_generator(file_contents, inspec):
+        macros[name] = (value, params, modifiers)
 
 
 def macrofile_split_generator(file_contents, inspec=False):
@@ -50,6 +51,7 @@ def macrofile_split_generator(file_contents, inspec=False):
         ctx.macroname = ""
         ctx.value = ""
         ctx.params = None
+        ctx.modifiers = ""
 
     for c in tokenize(file_contents):
         if ctx.state == "START":
@@ -84,6 +86,10 @@ def macrofile_split_generator(file_contents, inspec=False):
                 ctx.params = ""
                 continue
 
+            if c == '<':
+                ctx.state = 'MODIFIERS'
+                continue
+
             ctx.macroname += c
             continue
 
@@ -94,7 +100,18 @@ def macrofile_split_generator(file_contents, inspec=False):
             ctx.params = ctx.params + c
             continue
 
+        if ctx.state == 'MODIFIERS':
+            if c == '>':
+                ctx.state = "VALUE_START"
+                continue
+            ctx.modifiers += c
+            continue
+
         if ctx.state == "VALUE_START":
+            if c == '<':
+                ctx.state = 'MODIFIERS'
+                continue
+
             if inspec and c == "\n":
                 ctx.value += "\n"
                 ctx.state = "VALUE"
@@ -104,6 +121,13 @@ def macrofile_split_generator(file_contents, inspec=False):
                 if not inspec:
                     ctx.value += "\n"
                     ctx.state = "VALUE"
+                continue
+            # In macro files a bare newline terminates the definition (even
+            # with an empty body, e.g. '%foo()\n').  Without this, '\n' would
+            # fall through to isspace() and be silently swallowed.
+            if c == '\n' and not inspec:
+                yield ctx.macroname, ctx.value.rstrip(), ctx.params, set(ctx.modifiers)
+                _reset()
                 continue
             if c.isspace():
                 continue
@@ -136,7 +160,7 @@ def macrofile_split_generator(file_contents, inspec=False):
                     ctx.value += c
                 continue
             if c == '\n' and not inspec:
-                yield ctx.macroname, ctx.value.rstrip(), ctx.params
+                yield ctx.macroname, ctx.value.rstrip(), ctx.params, set(ctx.modifiers)
                 _reset()
                 continue
 
@@ -149,10 +173,10 @@ def macrofile_split_generator(file_contents, inspec=False):
             continue
 
     if ctx.state == "VALUE":
-        yield ctx.macroname, ctx.value.rstrip(), ctx.params
+        yield ctx.macroname, ctx.value.rstrip(), ctx.params, set(ctx.modifiers)
 
     if ctx.state == "VALUE_START" and inspec:
-        yield ctx.macroname, ctx.value.rstrip(), ctx.params
+        yield ctx.macroname, ctx.value.rstrip(), ctx.params, set(ctx.modifiers)
 
 
 def _get_macro_files(arch, prefix):

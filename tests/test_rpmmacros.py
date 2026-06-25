@@ -11,27 +11,27 @@ from norpm.macrofile import macrofile_parse, macrofile_split_generator
 def test_basicdef():
     macros = MacroRegistry()
     macrofile_parse("%foo bar", macros)
-    assert macros.to_dict() == {"foo": ("bar",)}
+    assert macros.to_dict() == {"foo": ("bar", None, set())}
     macrofile_parse(
         "%baz bar %{\n"
         " foo}\n",
         macros
     )
     assert macros.to_dict() == {
-        "foo": ("bar",),
-        "baz": ("bar %{\n foo}",),
+        "foo": ("bar", None, set()),
+        "baz": ("bar %{\n foo}", None, set()),
     }
     macrofile_parse(
         "%blah(p:) %x %y -p*",
         macros
     )
     assert macros.to_dict() == {
-        "foo": ("bar",),
-        "baz": ("bar %{\n foo}",),
-        "blah": ( "%x %y -p*", "p:"),
+        "foo": ("bar", None, set()),
+        "baz": ("bar %{\n foo}", None, set()),
+        "blah": ("%x %y -p*", "p:", set()),
     }
 
-    assert macros["foo"].to_dict() == ("bar",)
+    assert macros["foo"].to_dict() == ("bar", None, set())
     assert "foo" in macros
 
 
@@ -48,7 +48,7 @@ def test_newline():
         " %bar blah\\\n"
         " and \\blah",
         macros)
-    assert macros.to_dict() == {"foo": ("\n %bar blah\n and blah",)}
+    assert macros.to_dict() == {"foo": ("\n %bar blah\n and blah", None, set())}
 
 def test_trailing_space():
     macros = MacroRegistry()
@@ -57,31 +57,31 @@ def test_trailing_space():
         " %bar blah \\\n"
         " and spaces:    	",
         macros)
-    assert macros.to_dict() == {"foo": ("\n %bar blah \n and spaces:",)}
+    assert macros.to_dict() == {"foo": ("\n %bar blah \n and spaces:", None, set())}
 
 
 def test_backslashed():
     macros = MacroRegistry()
     macrofile_parse("%foo %{\\}\n}\n", macros)
-    assert macros.to_dict() == {"foo": ("%{}\n}",)}
+    assert macros.to_dict() == {"foo": ("%{}\n}", None, set())}
 
 def test_bash_parser():
     macros = MacroRegistry()
     macrofile_parse("%foo %(echo ahoj)\n", macros)
-    assert macros.to_dict() == {"foo": ("%(echo ahoj)",)}
+    assert macros.to_dict() == {"foo": ("%(echo ahoj)", None, set())}
     macrofile_parse("%bar %(\necho barcontent)\n", macros)
     assert macros["bar"].value == "%(\necho barcontent)"
 
 def test_ignore_till_eol():
     macros = MacroRegistry()
     macrofile_parse("foo %bar baz\nblah\n%recover foo", macros)
-    assert macros.to_dict() == {"recover": ("foo",)}
+    assert macros.to_dict() == {"recover": ("foo", None, set())}
 
 
 def test_whitespice_before_name():
     macros = MacroRegistry()
     macrofile_parse(" % bar baz", macros)
-    assert macros.to_dict() == {"bar": ("baz",)}
+    assert macros.to_dict() == {"bar": ("baz", None, set())}
 
 
 def test_whitespace_start():
@@ -96,16 +96,16 @@ def test_whitespace_start():
 
 def test_inspec_parser():
     parts = list(macrofile_split_generator("%foo \nblah\n", inspec=True))
-    assert parts == [("foo", "\nblah", None)]
+    assert parts == [("foo", "\nblah", None, set())]
 
     parts = list(macrofile_split_generator("%foo() \nblah\n", inspec=True))
-    assert parts == [("foo", "\nblah", "")]
+    assert parts == [("foo", "\nblah", "", set())]
 
     parts = list(macrofile_split_generator("%foo() \nblah	  \n", inspec=True))
-    assert parts == [("foo", "\nblah", "")]
+    assert parts == [("foo", "\nblah", "", set())]
 
     parts = list(macrofile_split_generator("%foo(p: ) \nblah\n", inspec=True))
-    assert parts == [("foo", "\nblah", "p: ")]
+    assert parts == [("foo", "\nblah", "p: ", set())]
 
 def test_forgemeta_parser():
     macro_def = """\

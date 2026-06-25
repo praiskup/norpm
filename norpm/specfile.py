@@ -19,13 +19,18 @@ from dataclasses import dataclass
 import re
 
 from norpm.tokenize import tokenize, Special, BRACKET_TYPES, OPENING_BRACKETS
-from norpm.macro import is_macro_character, parse_macro_call, drop_curly_brackets
+from norpm.macro import (is_macro_character, parse_macro_call,
+                         drop_curly_brackets, MacroDefinition)
 from norpm.macrofile import macrofile_parse, macrofile_split_generator
 from norpm.getopt import getopt
 from norpm.logging import get_logger
 from norpm.expression import eval_rpm_expr
 from norpm.exceptions import NorpmSyntaxError, NorpmRecursionError
 from norpm.builtins import BUILTINS, QuotedString
+
+
+class LiteralString(str):
+    """Marker for macro results that should not be re-expanded."""
 
 log = get_logger()
 
@@ -497,6 +502,19 @@ class _HideAndSeekMacro:
         return self.expand(string)
 
 
+def _apply_oneshot(context, retval, name, definitions, modifiers, depth):
+    if 'o' not in modifiers:
+        return retval
+    expanded = _specfile_expand_string(context, str(retval), definitions, depth+1)
+    # Replace the oneshot definition in-place with the cached literal so that
+    # %undefine pops this single entry and exposes the previous stack level
+    # (e.g. a plain %define).  Pushing a new entry would leave the oneshot
+    # definition underneath, causing it to re-trigger after %undefine.
+    macro = definitions[name]
+    macro.stack[-1] = MacroDefinition(expanded, None)
+    return expanded
+
+
 def _expand_snippet(context, snippet, definitions, depth=0):
     full_snippet = snippet
     snippet = full_snippet.text
@@ -630,10 +648,19 @@ def _expand_snippet(context, snippet, definitions, depth=0):
         return retval
     if retval == "":
         return retval
-    if not params:
-        return retval
-    if definitions[name].params is None:
-        return retval
+
+    macro = definitions[name]
+    modifiers = macro.modifiers
+
+    if 'l' in modifiers:
+        return LiteralString(retval)
+
+    # No params given by caller, or macro has no parameter spec — return the
+    # body directly.  We still must go through _apply_oneshot so that a
+    # oneshot ('<o>') macro gets expanded-and-cached on first use even when
+    # it is invoked without arguments (e.g. %define foo<o> %bar).
+    if not params or macro.params is None:
+        return _apply_oneshot(context, retval, name, definitions, modifiers, depth)
 
     # RPM also first expands the parameters before calling getopt()
     params = _expand_params(context, params, definitions, depth+1)
@@ -642,7 +669,7 @@ def _expand_snippet(context, snippet, definitions, depth=0):
     if params and params[0].startswith('%'):
         return retval
 
-    optlist, args = getopt(params, definitions[name].params)
+    optlist, args = getopt(params, macro.params)
 
     # Temporarily define '%1', '%*', '%-f', etc.
     for opt, arg in optlist:
@@ -932,14 +959,25 @@ def _specfile_expand_string_generator(context, string, macros, depth=0,
 
             definition = drop_curly_brackets(buffer)
             _, definition = definition.split(maxsplit=1)
-            expanded_def = specfile_expand_string(definition, macros, depth+1)
-            for name, body, params in macrofile_split_generator('%' + expanded_def, inspec=True):
-                macros[name] = (body, params)
+            name, body, params, modifiers = next(  # pylint: disable=stop-iteration-return
+                macrofile_split_generator('%' + definition, inspec=True))
+
+            if 'l' not in modifiers:
+                expanded_def = specfile_expand_string(definition, macros, depth+1)
+                name, body, params, _ = next(  # pylint: disable=stop-iteration-return
+                    macrofile_split_generator('%' + expanded_def, inspec=True))
+
+            macros[name] = (body, params, modifiers)
             continue
 
         quoted = False
         expanded = _expand_snippet(context, snippet, macros, depth)
         if expanded is None:
+            continue
+
+        if isinstance(expanded, LiteralString):
+            if context.expanding:
+                yield str(expanded)
             continue
 
         if isinstance(expanded, QuotedString):
