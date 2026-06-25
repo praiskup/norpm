@@ -3,7 +3,14 @@ RPM source file tokenizer
 """
 
 class Special:
-    """ Special token """
+    """
+    Special character token.
+    If '\n' is wrapped by Special, it is an escaped newline ('\\' is at the end
+    of the line).
+    If other characters are wrapped by Special, these are RPM controlling
+    characters like '{', '}' (without Special wrapper, these are meant to be
+    text-only characters (escaped curly bracket))
+    """
     def __init__(self, char):
         self.char = char
     def __str__(self):

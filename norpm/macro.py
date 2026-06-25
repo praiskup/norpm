@@ -9,15 +9,14 @@ from norpm.exceptions import NorpmInvalidMacroName
 class MacroDefinition:
     """A single macro definition."""
 
-    def __init__(self, value, params):
+    def __init__(self, value, params, modifiers=None):
         self.value = value
         self.params = params
+        self.modifiers = modifiers or set()
 
     def to_dict(self):
         """Get a serializable object."""
-        if self.params is not None:
-            return (self.value, self.params)
-        return (self.value,)
+        return (self.value, self.params, self.modifiers)
 
 
 class Macro:
@@ -26,9 +25,9 @@ class Macro:
     def __init__(self):
         self.stack = []
 
-    def define(self, value, parameters=None):
+    def define(self, value, parameters=None, modifiers=None):
         """Define this macro."""
-        self.stack.append(MacroDefinition(value, parameters))
+        self.stack.append(MacroDefinition(value, parameters, modifiers))
 
     def to_dict(self):
         """Return the last definition of macro as serializable object."""
@@ -52,6 +51,11 @@ class Macro:
     def params(self):
         """True if the latest definition is parametric."""
         return self.stack[-1].params
+
+    @property
+    def modifiers(self):
+        """Modifiers of the latest definition."""
+        return self.stack[-1].modifiers
 
 
 class MacroRegistry:
@@ -82,17 +86,18 @@ class MacroRegistry:
     def define(self, name, value, special=False):
         """(re)define macro"""
         params = None
+        modifiers = None
 
         if not special and not is_macro_name(name):
             raise NorpmInvalidMacroName(f"{name} is not a valid macro name")
 
         if isinstance(value, tuple):
-            value, params = value
+            value, params, modifiers = value
         try:
             macro = self.db[name]
         except KeyError:
             macro = self.db[name] = Macro()
-        macro.define(value, params)
+        macro.define(value, params, modifiers)
 
     def __contains__(self, name):
         return name in self.db

@@ -50,7 +50,8 @@ def override_macro_registry(original_registry, overrides_filename, tag):
                     registry.define(macroname, definition["value"])
                 else:
                     registry.define(macroname, (definition["value"],
-                                                definition["params"]))
+                                                definition["params"],
+                                                set()))
         if not found:
             _warn_once(f"Tag \"{tag}\" is not defined in "
                        f"\"{overrides_filename}\" database, macros "

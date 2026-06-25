@@ -139,14 +139,14 @@ def test_empty_expansion_in_epxr():
 %{expand:%%global %{1}_version_diff %{gsub %2 %d+: %{quote:}}}
 %{expand:%%global %{1}_version %%sub %2 %%[1 + %%{len:%2} - %%{len:%%%{1}_version_diff}]  %%{len:%2}}
 %{expand:%%global %{1}_epoch %%sub %2 1 %%[%%{len:%2} - %%{len:%%%{1}_version_diff} - 1]}
-''', '')
+''', '', set())
 
     db["nodejs_define_version2"] = ('''\
 %{expand:%%global %{1}_evr %2}
 %{expand:%%global %{1}_version_diff %{gsub %2 %d+: %{quote:}}}
 %{expand:%%global %{1}_version %%sub %2 %%{expr:1 + %%{len:%2} - %%{len:%%%{1}_version_diff}}  %%{len:%2}}
 %{expand:%%global %{1}_epoch %%sub %2 1 %%{expr:%%{len:%2} - %%{len:%%%{1}_version_diff} - 1}}
-''', '')
+''', '', set())
 
     assert specfile_expand("""\
 %nodejs_define_version foo 666:1.1.1-2

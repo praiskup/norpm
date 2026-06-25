@@ -12,6 +12,7 @@ from norpm.specfile import (
     specfile_expand_generator,
 )
 from norpm.macro import MacroRegistry
+from norpm.macrofile import macrofile_split_generator
 from norpm.exceptions import NorpmRecursionError
 
 
@@ -491,3 +492,118 @@ def test_definition_with_curly_brackets():
  a b c
 034
 """
+
+
+def test_literal_modifier():
+    db = MacroRegistry()
+    db["bar"] = "expanded_bar"
+    assert specfile_expand_string("%define foo<l> %bar\n%foo", db) == "%bar"
+
+
+def test_literal_modifier_double_percent():
+    db = MacroRegistry()
+    assert specfile_expand_string("%define foo<l> some%%thing\n%foo", db) == "some%%thing"
+
+
+def test_literal_modifier_global():
+    db = MacroRegistry()
+    db["bar"] = "expanded_bar"
+    spec = "%global foo<l> %bar\n%foo"
+    assert specfile_expand_string(spec, db) == "%bar"
+    assert db["foo"].value == "%bar"
+
+
+def test_literal_modifier_global_no_expand():
+    db = MacroRegistry()
+    db["bar"] = "expanded_bar"
+    spec = "%global foo<l> %bar\n"
+    specfile_expand_string(spec, db)
+    assert db["foo"].value == "%bar"
+
+
+def test_oneshot_modifier():
+    db = MacroRegistry()
+    db["bar"] = "result"
+    spec = "%define foo<o> %bar\n%foo %foo"
+    assert specfile_expand_string(spec, db) == "result result"
+
+
+def test_oneshot_caches_result():
+    db = MacroRegistry()
+    db["counter"] = "first"
+    specfile_expand_string("%define cached<o> %counter\n%cached", db)
+    db["counter"] = "second"
+    assert specfile_expand_string("%cached", db) == "first"
+
+
+def test_global_oneshot_expands_twice():
+    """%global<o> expands the body twice: once at definition, once on first use."""
+    db = MacroRegistry()
+    result = specfile_expand_string(
+        "%global value final\n"
+        "%global indirect %%value\n"
+        "%global cached<o> %indirect\n"
+        "%cached", db)
+    assert result == "final"
+
+
+def test_global_oneshot_deferred_use():
+    """One-shot fires on first use — picks up the value of %bar at that time."""
+    db = MacroRegistry()
+    specfile_expand_string("%global foo<o> %%bar\n", db)
+    specfile_expand_string("%global bar final\n", db)
+    specfile_expand_string("%global bar final2\n", db)
+    assert specfile_expand_string("%foo", db) == "final2"
+
+
+def test_global_oneshot_caches_on_first_use():
+    """One-shot caches the result on first use; later redefinitions don't affect it."""
+    db = MacroRegistry()
+    specfile_expand_string("%global foo<o> %%bar\n", db)
+    specfile_expand_string("%global bar final\n", db)
+    assert specfile_expand_string("%foo", db) == "final"
+    specfile_expand_string("%global bar final2\n", db)
+    assert specfile_expand_string("%foo", db) == "final"
+
+
+def test_oneshot_rearm_by_undefine():
+    db = MacroRegistry()
+    result = specfile_expand_string(
+        "%global counter first\n"
+        "%define cached %counter\n"
+        "%cached\n"
+        "%global counter second\n"
+        "%cached\n"
+        "%define cached<o> %counter\n"
+        "%cached\n"
+        "%global counter third\n"
+        "%cached\n"
+        "%undefine cached\n"
+        "%cached\n"
+        "%global counter fourth\n"
+        "%cached", db)
+    assert result == "first\nsecond\nsecond\nsecond\n\nthird\nfourth"
+
+
+def test_literal_macro_used_in_definition():
+    db = MacroRegistry()
+    spec = "%define bar<l> %something\n%define foo %bar\n%foo"
+    assert specfile_expand_string(spec, db) == "%something"
+
+
+def test_modifier_with_params():
+    db = MacroRegistry()
+    parts = list(specfile_expand_string_generator(
+        "%define foo()<l> body\n%foo", db))
+    assert "".join(parts) == "body"
+
+
+def test_modifier_parsing_in_macrofile():
+    parts = list(macrofile_split_generator("%foo<l> body\n"))
+    assert parts == [("foo", "body", None, {'l'})]
+
+    parts = list(macrofile_split_generator("%bar()<o> body\n"))
+    assert parts == [("bar", "body", "", {'o'})]
+
+    parts = list(macrofile_split_generator("%baz(p:)<lo> body\n"))
+    assert parts == [("baz", "body", "p:", {'l', 'o'})]
