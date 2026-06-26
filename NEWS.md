@@ -1,5 +1,8 @@
 # norpm NEWS
 
+## v1.11
+- Make MacroRegistry.define() more flexible and compatible with v1.9
+
 ## v1.10
 - Support RPM 6.1+ macro modifiers (`<l>` and `<o>`)
 - Tests for ExcludeArch/ExclusiveArch parsing

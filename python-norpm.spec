@@ -1,5 +1,5 @@
 Name:           python-norpm
-Version:        1.10
+Version:        1.11
 Release:        1%?dist
 Summary:        RPM Macro Expansion in Python
 
