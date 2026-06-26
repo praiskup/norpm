@@ -92,7 +92,8 @@ class MacroRegistry:
             raise NorpmInvalidMacroName(f"{name} is not a valid macro name")
 
         if isinstance(value, tuple):
-            value, params, modifiers = value
+            # ensure there’s enough to unpack
+            value, params, modifiers, *_ = value + (None, None)
         try:
             macro = self.db[name]
         except KeyError:
