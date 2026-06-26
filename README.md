@@ -27,6 +27,11 @@ with open("SPEC", "r", encoding="utf8") as fd:
     print("Version:", registry["version"].value)
 ```
 
+Changes
+-------
+
+See [NEWS.md](NEWS.md) for the release history.
+
 State of the implementation
 -----
 
