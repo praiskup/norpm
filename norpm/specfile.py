@@ -26,11 +26,7 @@ from norpm.getopt import getopt
 from norpm.logging import get_logger
 from norpm.expression import eval_rpm_expr
 from norpm.exceptions import NorpmSyntaxError, NorpmRecursionError
-from norpm.builtins import BUILTINS, QuotedString
-
-
-class LiteralString(str):
-    """Marker for macro results that should not be re-expanded."""
+from norpm.builtins import BUILTINS, QuotedString, LiteralString
 
 log = get_logger()
 
