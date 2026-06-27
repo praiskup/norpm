@@ -13,3 +13,9 @@ class NorpmRecursionError(NorpmError):
 
 class NorpmInvalidMacroName(NorpmError):
     """Trying to define macro with a wrong name"""
+
+class NorpmNoSuchMacro(NorpmError):
+    """Referenced macro is not defined"""
+
+class NorpmMissingArgument(NorpmError):
+    """Builtin macro called without a required argument"""

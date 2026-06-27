@@ -26,11 +26,7 @@ from norpm.getopt import getopt
 from norpm.logging import get_logger
 from norpm.expression import eval_rpm_expr
 from norpm.exceptions import NorpmSyntaxError, NorpmRecursionError
-from norpm.builtins import BUILTINS, QuotedString
-
-
-class LiteralString(str):
-    """Marker for macro results that should not be re-expanded."""
+from norpm.builtins import BUILTINS, QuotedString, LiteralString
 
 log = get_logger()
 
@@ -822,6 +818,8 @@ def _expand_params(context, params, macros, depth):
     strings, or string.  We need to expand differently depending on the type.
     """
     if isinstance(params, list):
+        if not params:
+            return []
         params = params[0]
         return _specfile_expand_string_quoted(context, params, macros, depth+1)
     return [_specfile_expand_string(context, params, macros, depth+1)]
