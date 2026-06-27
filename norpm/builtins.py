@@ -20,6 +20,10 @@ class QuotedString:
         return self.string
 
 
+class LiteralString(str):
+    """Marker for macro results that should not be re-expanded."""
+
+
 class _Builtin:
     expand_params = True
     @classmethod
@@ -182,11 +186,72 @@ class _BuiltinUndefine(_Builtin):
         db.undefine(params[0])
         return ""
 
+
 class _BuiltinUpper(_Builtin):
     @classmethod
     def eval(cls, snippet, params, db):
         return params[0].upper()
 
+
+class _BuiltInURL2Path(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, db):
+        urlstrings = [
+            "file://",
+            "ftp://",
+            "hkp://",
+            "http://",
+            "https://",
+        ]
+        url = params[0]
+
+        def get_path(idx: int):
+            i = idx
+            while i < len(url) and url[i] != "/":
+                i += 1
+            rest = url[i:]
+            return rest or "/"
+
+        if url == "-":
+            return "/"
+        for urlstring in urlstrings:
+            if url.startswith(urlstring):
+                return get_path(len(urlstring))
+        return url or "/"
+
+
+class _BuiltInShescape(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, db):
+        out = []
+        for arg in params:
+            escaped = "'"
+            for char in arg:
+                if char == "'":
+                    escaped += "'\\''"
+                else:
+                    escaped += char
+            escaped += "'"
+            out.append(escaped)
+        return LiteralString(" ".join(out))
+
+
+class _BuiltinUncompress(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, db):
+        filename = params[0]
+        if not filename:
+            return ""
+        return "%__rpmuncompress " + filename
+
+
+class _BuiltinMacrobody(_Builtin):
+    @classmethod
+    def eval(cls, snippet, params, db):
+        name = params[0]
+        if name not in db:
+            return ""
+        return LiteralString(db[name].value)
 
 
 BUILTINS = {
@@ -206,4 +271,9 @@ BUILTINS = {
     "suffix": _BuiltinSuffix,
     "undefine": _BuiltinUndefine,
     "upper": _BuiltinUpper,
+    "url2path": _BuiltInURL2Path,
+    "u2p": _BuiltInURL2Path,
+    "shescape": _BuiltInShescape,
+    "uncompress": _BuiltinUncompress,
+    "macrobody": _BuiltinMacrobody,
 }

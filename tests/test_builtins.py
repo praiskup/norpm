@@ -184,6 +184,96 @@ a b a b =
 """
 
 
+def test_url2path():
+    """
+    Test %url2path and %u2p.
+    """
+    spec = """\
+%{url2path:http://example.com/foo/bar}
+%{url2path:https://host.org/a}
+%{url2path:ftp://h/x/y}
+%{url2path:hkp://keys.example/k}
+%{url2path:file:///etc/passwd}
+%{url2path:http://example.com}
+%{url2path:/already/a/path}
+%{url2path:plain-string}
+%{u2p:http://example.com/via-alias}
+%{url2path:}
+%{url2path:-}
+"""
+    assert specfile_expand_string(spec, MacroRegistry()) == """\
+/foo/bar
+/a
+/x/y
+/k
+/etc/passwd
+/
+/already/a/path
+plain-string
+/via-alias
+/
+/
+"""
+
+
+def test_shescape():
+    """
+    Test %shescape.
+    """
+    spec = """\
+%{shescape:it's}
+%{shescape:$HOME}
+%{shescape:a b c}
+%{shescape a b c}
+%{shescape:$(rm -rf /)}
+%{shescape:foo'; rm -rf $HOME; echo '}
+%{shescape:a"b"c}
+%{shescape:''''}
+"""
+    assert specfile_expand_string(spec, MacroRegistry()) == """\
+'it'\\''s'
+'$HOME'
+'a b c'
+'a' 'b' 'c'
+'$(rm -rf /)'
+'foo'\\''; rm -rf $HOME; echo '\\'''
+'a"b"c'
+''\\'''\\'''\\'''\\'''
+"""
+
+
+def test_uncompress():
+    """
+    Test %uncompress.
+    """
+    spec = """\
+%{uncompress:foo.tar.gz}
+%define __rpmuncompress /usr/bin/rpmuncompress
+%{uncompress:bar.tgz}
+"""
+    assert specfile_expand_string(spec, MacroRegistry()) == """\
+%__rpmuncompress foo.tar.gz
+/usr/bin/rpmuncompress bar.tgz
+"""
+
+
+def test_macrobody():
+    """
+    Test %macrobody.
+
+    """
+    spec = """\
+%define greeting hello %name
+%define name world
+%{macrobody:greeting}
+%{macrobody:name}
+"""
+    assert specfile_expand_string(spec, MacroRegistry()) == """\
+hello %name
+world
+"""
+
+
 def test_suffix():
     """
     Test %suffix
