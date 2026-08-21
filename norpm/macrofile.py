@@ -207,6 +207,6 @@ def system_macro_registry(arch=None, prefix=None):
         registry.target = arch
 
     for file in _get_macro_files(arch, prefix):
-        with open(file, "r", encoding="utf-8") as fd:
+        with open(file, "r", encoding="utf-8", errors='ignore') as fd:
             macrofile_parse(fd.read(), registry)
     return registry
